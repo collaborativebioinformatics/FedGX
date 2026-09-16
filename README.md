@@ -39,7 +39,7 @@ ____________________________
 ____________________________
 
 # Plan
-  ![Federated GWAS architecture](federation_architecture.png)
+  ![Federated GWAS architecture](FederationFigure_MR.png)
 ____________________________
  
 # Team members
