@@ -38,7 +38,7 @@ ____________________________
 
 ____________________________
 
-# Plan
+# Flowchart
   ![Federated GWAS architecture](FederationFigure_MR.png)
 ____________________________
  
