@@ -4,10 +4,16 @@
 # Example: ./scripts/generate_federated_sites.sh 1
 
 # One site per ancestry: site 1 EUR, site 2 EAS, site 3 AFR
-samples=(100000 95000 110000)
-nsnps=(500000 480000 520000)
-ancestry=(EUR EAS AFR)
+# Override via environment, e.g. SAMPLES="5000 5000 5000" NSNPS="50000 50000 50000"
+# This is the ONLY place sample/SNP counts are defined; don't sed-edit this file.
+read -ra samples <<< "${SAMPLES:-100000 95000 110000}"
+read -ra nsnps <<< "${NSNPS:-500000 480000 520000}"
+read -ra ancestry <<< "${ANCESTRY:-EUR EAS AFR}"
 nsites=${#samples[@]}
+if [ "${#nsnps[@]}" -ne "$nsites" ] || [ "${#ancestry[@]}" -ne "$nsites" ]; then
+  echo "Error: SAMPLES (${#samples[@]}), NSNPS (${#nsnps[@]}), ANCESTRY (${#ancestry[@]}) must all have the same count"
+  exit 1
+fi
 # Causal SNPs shared by all ancestries, and unique to each ancestry
 # (one number for every ancestry, or per ancestry, e.g. UNIQUE_CAUSALS=EUR=5,EAS=5,AFR=10)
 SHARED_CAUSALS="${SHARED_CAUSALS:-20}"
