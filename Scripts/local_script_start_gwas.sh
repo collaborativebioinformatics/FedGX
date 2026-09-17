@@ -198,14 +198,37 @@ case "${PROGRAM}" in
       REGENIE_TRAIT_FLAGS=(--bt)
     fi
 
+    # REGENIE step 1 fits the whole-genome model and is meant to run on a
+    # pruned subset of common variants, not the full set. Use a supplied list
+    # if there is one, otherwise take an evenly spaced subset across the
+    # genome, which keeps every chromosome represented.
+    STEP1_SNPS="${STEP1_SNPS:-20000}"
+    STEP1_EXTRACT="${STEP1_EXTRACT:-}"
+
+    if [ -z "${STEP1_EXTRACT}" ]; then
+      STEP1_EXTRACT="${WORKDIR}/step1_variants.snps"
+      TOTAL_SNPS=$(wc -l < "${BFILE}.bim")
+      if [ "${TOTAL_SNPS}" -le "${STEP1_SNPS}" ]; then
+        cut -f2 "${BFILE}.bim" > "${STEP1_EXTRACT}"
+      else
+        awk -v want="${STEP1_SNPS}" -v total="${TOTAL_SNPS}" '
+          { acc += want; if (acc >= total) { acc -= total; print $2 } }
+        ' "${BFILE}.bim" > "${STEP1_EXTRACT}"
+      fi
+      echo "Step 1 variant subset: $(wc -l < "${STEP1_EXTRACT}") of ${TOTAL_SNPS}"
+    else
+      echo "Step 1 variant subset: ${STEP1_EXTRACT} (supplied)"
+    fi
+
     echo ""
     echo "--- REGENIE step 1 ---"
     "${REGENIE}" \
       --step 1 \
       --bed "${BFILE}" \
+      --extract "${STEP1_EXTRACT}" \
       --covarFile "${COVAR}" \
       --phenoFile "${PHENO}" \
-      "${REGENIE_TRAIT_FLAGS[@]}" \
+      ${REGENIE_TRAIT_FLAGS[@]+"${REGENIE_TRAIT_FLAGS[@]}"} \
       --bsize 1000 \
       --lowmem \
       --lowmem-prefix "${WORKDIR}/tmp_rg" \
@@ -230,7 +253,7 @@ case "${PROGRAM}" in
       --covarFile "${COVAR}" \
       --phenoFile "${PHENO}" \
       --pred "${STEP1_OUT}_pred.list" \
-      "${STEP2_FLAGS[@]}" \
+      ${STEP2_FLAGS[@]+"${STEP2_FLAGS[@]}"} \
       --bsize 400 \
       --threads "${THREADS:-4}" \
       --out "${STEP2_OUT}"
