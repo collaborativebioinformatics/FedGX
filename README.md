@@ -201,8 +201,52 @@ The federated job handles:
 
 ## 9. Run GWAS Meta-Analysis using GWAMA from GWAS results generated across sites
 
-- Convert REGENIE output to GWAMA input format
-- Create Input File List
+- Make a QC for individual cohort GWAS summary statistics (from REGENIE/SAIGE/...) and convert it to GWAMA input format
+
+'''
+  Rscript gwas_cohort_qc.R \
+  --input cohort1.regenie.gz \
+  --cohort COHORT1 \
+  --build GRCh38 \
+  --trait-type quantitative \
+  --info-threshold 0.30 \
+  --min-n 30 \
+  --min-mac 6 \
+  --remove-palindromic TRUE \
+  --autosomes-only TRUE \
+  --snp-only TRUE \
+  --remove-duplicates TRUE \
+  --filter-test TRUE \
+  --test-value ADD \
+  --col-chr CHROM \
+  --col-pos GENPOS \
+  --col-id ID \
+  --col-ea ALLELE1 \
+  --col-nea ALLELE0 \
+  --col-eaf A1FREQ \
+  --col-beta BETA \
+  --col-se SE \
+  --col-n N \
+  --col-info INFO \
+  --col-log10p LOG10P \
+  --col-test TEST \
+  --col-chisq CHISQ \
+  --output-prefix test/COHORT1
+'''
+- Prepare input for GWAMA
+  
+  '''
+    For Binary/case-control:
+  ./run_gwama.sh or meta_output \
+       cohort1.GWAMA.txt.gz \
+       cohort2.GWAMA.txt.gz
+
+  For Quantitative:
+ ./run_gwama.sh qt meta_output \
+       cohort1.GWAMA.txt.gz \
+       cohort2.GWAMA.txt.gz
+  '''
+  
 - Run GWAMA
 - Interpret Output
 
