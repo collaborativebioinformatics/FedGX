@@ -1,8 +1,19 @@
 # FEDGX: Federated Learning Software for Multi-Tool Genome-Wide Association Studies across Cohort Sites
 ## Product of the Nordic Biobank x NVIDIA Hackathon
 
-# Flowchart
   ![Logo](docs/logo.jpeg)
+
+  ---
+
+## Table of Contents
+- [Summary](#summary)
+- [Flowchart](#flowchart)
+- [Quickstart](#quickstart)
+- [Data Documentation](#data-specifications)
+- [Detailed Setup](#detailed-setup-instructions)
+- [References](#references)
+
+---
 
 # Summary
 
@@ -16,22 +27,9 @@ ____________________________
 
 # Flowchart
   ![Federated GWAS architecture](docs/FederationFigure_MR.png)
-
 ____________________________
 
----
-
-## Table of Contents
-- [Quickstart](#quickstart----server-and-clients-configuration)
-- [Data Documentation](#data-specifications)
-- [Detailed Setup](#detailed-setup-instructions)
-- [References](#references)
-
----
-
-____________________________
-
-# Quickstart -- Server and Clients Configuration
+# Quickstart
 
 ## 1. Start NVFLARE Dashboard and FL Server on AWS
 
