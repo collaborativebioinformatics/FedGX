@@ -1,9 +1,3 @@
----
-editor_options: 
-  markdown: 
-    wrap: 72
----
-
 # Federated Learning Software for Multi-Tool Genome-Wide Association Studies across Cohort Sites: Introducing FedGX, Product of the Nordic Biobank x NVIDIA Hackathon
 
 ## Authors
