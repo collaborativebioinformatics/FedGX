@@ -1319,7 +1319,7 @@ clean <- qc$clean_data
 
 clean_file <- file.path(
     opt$output_dir,
-    paste0(output_prefix, ".cleaned.txt.gz")
+    paste0(output_prefix, ".cleaned.txt")
 )
 summary_file <- file.path(
     opt$output_dir,
@@ -1428,7 +1428,7 @@ if (nrow(clean) > 0) {
 
     gwama_file <- file.path(
         opt$output_dir,
-        paste0(output_prefix, ".GWAMA.txt.gz")
+        paste0(output_prefix, ".GWAMA.txt")
     )
 
     fwrite(

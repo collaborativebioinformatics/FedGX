@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
-
+#
 # Run fixed-effect (FFX), random-effects (RFX), or both GWAMA models.
 #
-# Existing fixed-effect usage remains supported:
 #   ./run_gwama.sh or meta_output cohort1.txt cohort2.txt [cohort3.txt ...]
-#
-# Select a model explicitly:
 #   ./run_gwama.sh or --model fixed  meta_output cohort1.txt cohort2.txt
 #   ./run_gwama.sh or --model random meta_output cohort1.txt cohort2.txt
 #   ./run_gwama.sh or --model both   meta_output cohort1.txt cohort2.txt
 #
 # Use qt instead of or for quantitative traits.
+#
+# Input files are produced by gwas_cohort_qc_with_gwama.R and already use
+# GWAMA's default column names, so no --name_* flags are needed.
 
 set -euo pipefail
 
@@ -26,6 +26,9 @@ Arguments:
 
 Options:
   --model  Meta-analysis model. Default: fixed.
+           With only a handful of cohorts, tau^2 is poorly estimated and the
+           random-effects test is deflated: treat 'random' as a sensitivity
+           analysis, not a primary result.
 
 Outputs when --model both is used:
   <output_root>.fixed.out
@@ -81,24 +84,104 @@ if ! command -v GWAMA >/dev/null 2>&1; then
     exit 1
 fi
 
+# ---------------------------------------------------------------------------
+# Validate the cohort files before handing anything to GWAMA
+# ---------------------------------------------------------------------------
+if [[ "$MODE" == "or" ]]; then
+    REQUIRED_COLUMNS=(MARKERNAME EA NEA EAF N OR OR_95L OR_95U)
+else
+    REQUIRED_COLUMNS=(MARKERNAME EA NEA EAF N BETA SE)
+fi
+
 for file in "${COHORT_FILES[@]}"; do
     if [[ ! -f "$file" ]]; then
         echo "ERROR: cohort file not found: $file" >&2
         exit 1
     fi
+
+    if [[ "$file" == *.gz ]]; then
+        echo "ERROR: GWAMA reads plain text; gunzip $file first." >&2
+        exit 1
+    fi
+
+    header="$(head -1 "$file")"
+    for column in "${REQUIRED_COLUMNS[@]}"; do
+        if ! printf '%s\n' "$header" | tr '\t' '\n' | grep -qx -- "$column"; then
+            echo "ERROR: $file is missing required column '$column' for mode '$MODE'." >&2
+            echo "       header: $header" >&2
+            exit 1
+        fi
+    done
 done
 
 OUTPUT_DIRECTORY="$(dirname -- "$OUTPUT_ROOT")"
 mkdir -p -- "$OUTPUT_DIRECTORY"
 
+# Sorted, so GWAMA's reference allele -- which it takes from the FIRST file in
+# the list and applies to every SNP -- does not depend on the order the caller
+# happened to pass the cohorts in. Without this, the sign of every beta can
+# flip between otherwise identical runs.
 FILELIST="${OUTPUT_ROOT}.gwama.in"
-printf '%s\n' "${COHORT_FILES[@]}" > "$FILELIST"
+printf '%s\n' "${COHORT_FILES[@]}" | sort > "$FILELIST"
+
+N_COHORTS="${#COHORT_FILES[@]}"
 
 echo
-echo "GWAMA input files (${#COHORT_FILES[@]} cohorts):"
+echo "GWAMA input files (${N_COHORTS} cohorts, sorted):"
 echo "-------------------------------------------"
 cat "$FILELIST"
 echo
+
+if [[ "$MODEL" != "fixed" && "$N_COHORTS" -lt 5 ]]; then
+    echo "NOTE: ${N_COHORTS} cohorts is few for a random-effects model;" >&2
+    echo "      report fixed effects as the primary result." >&2
+    echo >&2
+fi
+
+# ---------------------------------------------------------------------------
+# Post-run checks
+# ---------------------------------------------------------------------------
+check_output() {
+    # Reports how many variants were found in how many cohorts. If nothing
+    # reaches n_studies == N_COHORTS, the marker names are not matching across
+    # sites and no meta-analysis actually happened, even though GWAMA exits 0.
+    local out_file="$1"
+    local n_expected="$2"
+
+    awk -v expected="$n_expected" -v f="$out_file" '
+        NR == 1 {
+            for (i = 1; i <= NF; i++) if ($i == "n_studies") col = i
+            if (!col) { print "WARNING: no n_studies column in " f > "/dev/stderr"; exit 0 }
+            next
+        }
+        col { counts[$col]++; if ($col + 0 > max) max = $col + 0 }
+        END {
+            if (!col) exit 0
+            print "  n_studies distribution:"
+            for (k = 1; k <= expected; k++)
+                if (k in counts) printf "    in %d cohort(s): %d variants\n", k, counts[k]
+            if (max < expected) {
+                printf "ERROR: no variant present in all %d cohorts (max n_studies = %d).\n", expected, max > "/dev/stderr"
+                printf "       Marker names are not matching across sites.\n" > "/dev/stderr"
+                exit 1
+            }
+        }
+    ' "$out_file"
+}
+
+report_log_warnings() {
+    local log_file="$1"
+    [[ -f "$log_file" ]] || return 0
+    # GWAMA reports allele-frequency discrepancies above 30% to its log but
+    # takes no action on them, so surface them here or they go unseen.
+    local n
+    n="$(grep -ci 'freq' "$log_file" || true)"
+    if [[ "$n" -gt 0 ]]; then
+        echo "  ${n} allele-frequency note(s) in ${log_file}:"
+        grep -i 'freq' "$log_file" | head -10 | sed 's/^/    /'
+        [[ "$n" -gt 10 ]] && echo "    ... ($((n - 10)) more)"
+    fi
+}
 
 run_model() {
     local model="$1"
@@ -124,6 +207,10 @@ run_model() {
         echo "ERROR: GWAMA did not create ${output_root}.out" >&2
         exit 1
     fi
+
+    check_output "${output_root}.out" "$N_COHORTS"
+    report_log_warnings "${output_root}.log.out"
+    echo
 }
 
 SCRIPT_DIRECTORY="$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)"
@@ -143,6 +230,12 @@ case "$MODEL" in
             exit 1
         fi
 
+        COMPARE_SCRIPT="$SCRIPT_DIRECTORY/compare_gwama_models.py"
+        if [[ ! -f "$COMPARE_SCRIPT" ]]; then
+            echo "ERROR: --model both needs $COMPARE_SCRIPT, which is missing." >&2
+            exit 1
+        fi
+
         FIXED_ROOT="${OUTPUT_ROOT}.fixed"
         RANDOM_ROOT="${OUTPUT_ROOT}.random"
         COMPARISON_FILE="${OUTPUT_ROOT}.comparison.tsv"
@@ -150,7 +243,7 @@ case "$MODEL" in
         run_model fixed "$FIXED_ROOT"
         run_model random "$RANDOM_ROOT"
 
-        python3 "$SCRIPT_DIRECTORY/compare_gwama_models.py" \
+        python3 "$COMPARE_SCRIPT" \
             --fixed "${FIXED_ROOT}.out" \
             --random "${RANDOM_ROOT}.out" \
             --output "$COMPARISON_FILE"
@@ -163,7 +256,6 @@ case "$MODEL" in
         ;;
 esac
 
-echo
 echo "GWAMA completed successfully."
 echo "Results:"
 printf '  %s\n' "${RESULTS[@]}"
