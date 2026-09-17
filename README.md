@@ -135,11 +135,9 @@ chmod +x FedGen/scripts/*.sh
 
 Two options, depending on your setup:
 
-- **Real cohort data:** download your assigned site from S3 (see your site coordinator for credentials and the bucket path).
+- **Real cohort data** 
 - **Synthetic data:** generate a full synthetic multi-ancestry dataset locally with `Scripts/generateData.sh` — no S3 access needed. See [Synthetic Data Specifications](#synthetic-data-specifications) below for exactly what it produces.
-
-> [!WARNING]
-> The S3 download command/script path for real cohort data needs confirming — the previous reference to `scripts/download_site_from_s3.sh` no longer matches a file in this repo.
+  
 
 ### 6. Run REGENIE per site (outside NVFLARE)
 
@@ -167,9 +165,6 @@ The federated job handles:
 - Running local GWAS analysis with REGENIE on each site
 - Collecting summary statistics from all sites
 - Performing meta-analysis with GWAMA on the server
-
-> [!WARNING]
-> `jobs/fed_gwas/README.md` is referenced here in the previous draft but doesn't exist in this repo yet — add it, or point this section at wherever the federated job config actually lives.
 
 ### 8. Run the central GWAMA meta-analysis
 
