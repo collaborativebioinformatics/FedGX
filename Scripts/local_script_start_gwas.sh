@@ -61,26 +61,34 @@ fi
 
 # ---------------------------------------------------------------------------
 # Paths
+#
+# client.py passes BFILE / PHENO_FILE / COVAR_FILE / OUTDIR explicitly, taken
+# from the site's datasets.json. When run by hand without them, fall back to
+# the <DATAPATH>/<POPULATIONID>/<POPULATIONID>_* convention.
 # ---------------------------------------------------------------------------
-DATAPATH_DEFAULT="${HOME}/Data"
+DATAPATH_DEFAULT="/home/ubuntu/data"
 
 if [ -z "${DATAPATH:-}" ]; then
   DATAPATH="${DATAPATH_DEFAULT}"
-  echo "DATAPATH not set in the environment; using default: ${DATAPATH}"
 else
   echo "DATAPATH is set to: ${DATAPATH}"
 fi
 export DATAPATH
 
 POPULATIONPATH="${DATAPATH}/${POPULATIONID}"
+
+BFILE="${BFILE:-${POPULATIONPATH}/${POPULATIONID}_geno}"
+COVAR_RAW="${COVAR_FILE:-${POPULATIONPATH}/${POPULATIONID}_geno.covar}"
+PHENO_RAW="${PHENO_FILE:-${POPULATIONPATH}/${POPULATIONID}_pheno.pheno}"
 OUTDIR="${OUTDIR:-${POPULATIONPATH}/gwas_out}"
+
 WORKDIR="${OUTDIR}/work"
 mkdir -p "${WORKDIR}"
 
-# Site inputs, all derived from POPULATIONID -- nothing hardcoded to site1.
-BFILE="${POPULATIONPATH}/${POPULATIONID}_geno"
-COVAR_RAW="${POPULATIONPATH}/${POPULATIONID}_geno.covar"
-PHENO_RAW="${POPULATIONPATH}/${POPULATIONID}_pheno.pheno"
+# Binaries: client.py resolves these from tools.json and passes them in.
+# Fall back to whatever is on PATH.
+TOOL_BIN="${TOOL_BIN:-}"
+RSCRIPT_BIN="${RSCRIPT_BIN:-Rscript}"
 
 QC_SCRIPT="${SCRIPT_DIR}/gwas_cohort_qc_with_gwama.R"
 
@@ -92,6 +100,7 @@ echo "Program    : ${PROGRAM}"
 echo "Trait type : ${TRAITTYPE}"
 echo "Build      : ${BUILD}"
 echo "Genotypes  : ${BFILE}"
+echo "Binary     : ${TOOL_BIN:-<from PATH>}"
 echo "Phenotype  : ${PHENO_RAW}"
 echo "Covariates : ${COVAR_RAW}"
 echo "Output dir : ${OUTDIR}"
@@ -177,7 +186,12 @@ case "${PROGRAM}" in
   regenie)
     echo ""
     echo "Running REGENIE workflow"
-    command -v regenie >/dev/null 2>&1 || { echo "ERROR: regenie not on PATH" >&2; exit 1; }
+    REGENIE="${TOOL_BIN:-$(command -v regenie || true)}"
+    if [ -z "${REGENIE}" ] || [ ! -x "${REGENIE}" ]; then
+      echo "ERROR: regenie binary not found (TOOL_BIN='${TOOL_BIN:-}')" >&2
+      exit 1
+    fi
+    echo "Using regenie: ${REGENIE}"
 
     REGENIE_TRAIT_FLAGS=()
     if [ "${TRAITTYPE}" = "binary" ]; then
@@ -186,7 +200,7 @@ case "${PROGRAM}" in
 
     echo ""
     echo "--- REGENIE step 1 ---"
-    regenie \
+    "${REGENIE}" \
       --step 1 \
       --bed "${BFILE}" \
       --covarFile "${COVAR}" \
@@ -210,7 +224,7 @@ case "${PROGRAM}" in
       STEP2_FLAGS=(--bt --firth --approx --pThresh 0.05)
     fi
 
-    regenie \
+    "${REGENIE}" \
       --step 2 \
       --bed "${BFILE}" \
       --covarFile "${COVAR}" \
@@ -263,9 +277,13 @@ echo "Summary statistics: ${SUMSTATS} ($(wc -l < "${SUMSTATS}") lines)"
 # ---------------------------------------------------------------------------
 echo ""
 echo "--- Cohort QC and GWAMA conversion ---"
-command -v Rscript >/dev/null 2>&1 || { echo "ERROR: Rscript not on PATH" >&2; exit 1; }
+if ! command -v "${RSCRIPT_BIN}" >/dev/null 2>&1 && [ ! -x "${RSCRIPT_BIN}" ]; then
+  echo "ERROR: Rscript not found (RSCRIPT_BIN='${RSCRIPT_BIN}')" >&2
+  exit 1
+fi
+echo "Using Rscript: ${RSCRIPT_BIN}"
 
-Rscript "${QC_SCRIPT}" \
+"${RSCRIPT_BIN}" "${QC_SCRIPT}" \
   --input "${SUMSTATS}" \
   --cohort "${POPULATIONID}" \
   --build "${BUILD}" \

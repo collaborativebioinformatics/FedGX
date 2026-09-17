@@ -1,0 +1,10 @@
+{
+  "site1": {
+    "populationid": "site1",
+    "bfile":  "/home/ubuntu/data/site1/site1_geno",
+    "pheno":  "/home/ubuntu/data/site1/site1_pheno.pheno",
+    "covar":  "/home/ubuntu/data/site1/site1_geno.covar",
+    "outdir": "/home/ubuntu/data/site1/gwas_out",
+    "build":  "GRCh38"
+  }
+}

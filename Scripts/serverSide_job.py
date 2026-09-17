@@ -9,10 +9,15 @@ Standardisation happens at the SITES, in gwas_cohort_qc_with_gwama.R, which
 emits GWAMA-format summary statistics directly. The server therefore validates
 what it receives rather than converting it, and never needs to know which GWAS
 tool produced the numbers.
+
+The meta-analysis itself is delegated to run_gwama.sh, so there is exactly one
+GWAMA invocation in the codebase: the same script can be re-run by hand against
+the collected files without repeating the GWAS.
 """
 
 import argparse
 import os
+import subprocess
 
 from nvflare.app_opt.pt.recipes.fedavg import FedAvgRecipe
 from nvflare.recipe import SimEnv, add_experiment_tracking, ProdEnv
@@ -23,20 +28,30 @@ from nvflare.client import FLModel
 from nvflare.apis.fl_constant import FLContextKey
 from nvflare.apis.fl_context import FLContext
 
-from serverSide_metaAnalysis import runGWAMA
+SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
+GWAMA_WRAPPER = os.environ.get(
+    "FEDGX_GWAMA_WRAPPER", os.path.join(SCRIPT_DIR, "run_gwama.sh")
+)
 
-# Which client script runs which tool. No converter here: the R QC script at
-# the site produces GWAMA format for every tool.
+# Every method uses the same site driver, which dispatches internally on
+# PROGRAM. Listing them separately keeps --method validated and gives a place
+# to hang per-method differences later.
 ADAPTERS = {
-    "regenie": {"script": "client_regenie.sh"},
-    "saige": {"script": "client_saige.sh"},
+    "regenie": {"script": "local_script_start_gwas.sh"},
+    "saige": {"script": "local_script_start_gwas.sh"},
 }
 
-# Columns the R script writes, by trait type. The server checks for these and
-# rejects a non-conforming site rather than trying to repair it.
-REQUIRED_COLUMNS = {
-    "binary": ["MARKERNAME", "EA", "NEA", "EAF", "N", "OR", "OR_95L", "OR_95U"],
-    "quantitative": ["MARKERNAME", "EA", "NEA", "EAF", "N", "BETA", "SE"],
+# Columns the R script writes, by trait type, and the mode run_gwama.sh needs.
+TRAIT_TYPES = {
+    "binary": {
+        "gwama_mode": "or",
+        "columns": ["MARKERNAME", "EA", "NEA", "EAF", "N",
+                    "OR", "OR_95L", "OR_95U"],
+    },
+    "quantitative": {
+        "gwama_mode": "qt",
+        "columns": ["MARKERNAME", "EA", "NEA", "EAF", "N", "BETA", "SE"],
+    },
 }
 
 
@@ -53,20 +68,21 @@ class GWASMetaAggregator(ModelAggregator):
     file, and runs the meta-analysis over the ones that pass.
     """
 
-    def __init__(self, trait_type="binary", output_folder="server_results"):
+    def __init__(self, trait_type="binary", model="fixed",
+                 output_folder="server_results"):
         super().__init__()
         self.received_params_type = None
         self.trait_type = trait_type
+        self.model = model
         self.output_folder = output_folder
 
         # Set on the first accepted model
-        self.gwama_input_file = None
         self.job_dir = None
         self.output_dir = None
         self.gwama_files = []
         self.rejected = []
 
-    # -- helpers ------------------------------------------------------------
+    # -- helpers -------------------------------------------------------------
 
     def _ensure_output_dir(self):
         if self.output_dir is not None:
@@ -74,7 +90,6 @@ class GWASMetaAggregator(ModelAggregator):
         self.job_dir = _get_run_dir(self.fl_ctx)
         self.output_dir = os.path.join(self.job_dir, self.output_folder)
         os.makedirs(self.output_dir, exist_ok=True)
-        self.gwama_input_file = os.path.join(self.output_dir, "gwama.in")
         print(f"Output directory: {self.output_dir}")
 
     def _validate(self, path, site_name):
@@ -82,7 +97,7 @@ class GWASMetaAggregator(ModelAggregator):
         Structural checks on a site file. Returns None if usable, otherwise a
         string describing why it is not.
         """
-        required = REQUIRED_COLUMNS[self.trait_type]
+        required = TRAIT_TYPES[self.trait_type]["columns"]
 
         try:
             with open(path) as f:
@@ -117,19 +132,31 @@ class GWASMetaAggregator(ModelAggregator):
 
         self._ensure_output_dir()
 
-        site_name = model.meta.get("site_name", "unknown_site")
-        dataset_id = str(model.meta.get("dataset_id", "unknown_id"))
+        meta = model.meta or {}
+        site_name = meta.get("site_name", "unknown_site")
+        dataset_id = str(meta.get("dataset_id", "unknown_id"))
 
         if model.params.get("SUCCESS") is False:
-            error_msg = model.meta.get("error_message", "Unknown error")
+            error_msg = meta.get("error_message", "Unknown error")
             print(f"ERROR: {site_name} reported failure: {error_msg}")
             self.rejected.append((site_name, f"client error: {error_msg}"))
             return
 
-        results_file_content = model.meta.get("results_file", "")
+        results_file_content = meta.get("results_file", "")
         if not results_file_content:
             print(f"WARNING: no results_file content from {site_name}")
             self.rejected.append((site_name, "empty results_file"))
+            return
+
+        # A site running a different trait type would produce the wrong columns
+        # anyway, but saying so explicitly gives a clearer error.
+        site_trait = meta.get("trait_type")
+        if site_trait and site_trait != self.trait_type:
+            print(f"ERROR: {site_name} ran trait_type '{site_trait}', "
+                  f"server expects '{self.trait_type}'")
+            self.rejected.append(
+                (site_name, f"trait_type mismatch: {site_trait}")
+            )
             return
 
         gwama_path = os.path.join(
@@ -140,8 +167,7 @@ class GWASMetaAggregator(ModelAggregator):
         print(f"Received {len(results_file_content)} bytes from {site_name} "
               f"(site{dataset_id}) -> {gwama_path}")
 
-        # Optional QC report from the R script, stored alongside for the record
-        qc_summary = model.meta.get("qc_summary", "")
+        qc_summary = meta.get("qc_summary", "")
         if qc_summary:
             qc_path = os.path.join(
                 self.output_dir, f"site{dataset_id}_{site_name}_qc_summary.txt"
@@ -160,7 +186,8 @@ class GWASMetaAggregator(ModelAggregator):
 
     def aggregate_model(self) -> FLModel:
         """
-        Write gwama.in in a deterministic order and run the meta-analysis.
+        Hand the collected files to run_gwama.sh, which sorts the filelist,
+        validates the headers, runs GWAMA and checks n_studies afterwards.
         """
         if self.rejected:
             print("\nSites excluded from the meta-analysis:")
@@ -173,25 +200,38 @@ class GWASMetaAggregator(ModelAggregator):
                 "a meta-analysis needs at least 2"
             )
 
-        # Sorted so GWAMA's reference allele -- taken from the first file in the
-        # list -- does not depend on the order the sites happened to respond in.
-        with open(self.gwama_input_file, "w") as f:
-            for _, path in sorted(self.gwama_files):
-                f.write(f"{path}\n")
+        if not os.path.isfile(GWAMA_WRAPPER):
+            raise FileNotFoundError(
+                f"GWAMA wrapper not found: {GWAMA_WRAPPER} "
+                "(set FEDGX_GWAMA_WRAPPER)"
+            )
 
-        print(f"\ngwama.in: {len(self.gwama_files)} sites")
-        for dataset_id, path in sorted(self.gwama_files):
-            print(f"  site{dataset_id}: {os.path.basename(path)}")
+        mode = TRAIT_TYPES[self.trait_type]["gwama_mode"]
+        output_root = os.path.join(self.output_dir, "gwama")
 
-        runGWAMA(
-            self.gwama_input_file,
-            os.path.join(self.output_dir, "gwama"),
-            n_expected=len(self.gwama_files),
-        )
+        # Sorted here as well as inside the wrapper, so the command that gets
+        # logged is the command that can be replayed verbatim.
+        files = [path for _, path in sorted(self.gwama_files)]
+
+        cmd = ["bash", GWAMA_WRAPPER, mode, "--model", self.model,
+               output_root] + files
+
+        print(f"\nMeta-analysis over {len(files)} sites")
+        print("Command: " + " ".join(cmd))
+
+        result = subprocess.run(cmd, capture_output=True, text=True)
+        print(result.stdout)
+        if result.stderr:
+            print(result.stderr)
+
+        if result.returncode != 0:
+            raise RuntimeError(
+                f"run_gwama.sh exited {result.returncode}; see output above"
+            )
 
         aggregated_params = {
             "META_ANALYSIS_COMPLETED": True,
-            "N_SITES": len(self.gwama_files),
+            "N_SITES": len(files),
             "N_REJECTED": len(self.rejected),
         }
 
@@ -225,9 +265,13 @@ def define_parser():
                         choices=sorted(ADAPTERS),
                         help="GWAS tool the clients run (default: %(default)s)")
     parser.add_argument("--trait_type", type=str, default="binary",
-                        choices=sorted(REQUIRED_COLUMNS),
-                        help="Trait type; must match the --trait-type given to "
-                             "the site R script (default: %(default)s)")
+                        choices=sorted(TRAIT_TYPES),
+                        help="Trait type; the clients pass this to the R QC "
+                             "script (default: %(default)s)")
+    parser.add_argument("--model", type=str, default="fixed",
+                        choices=["fixed", "random", "both"],
+                        help="Meta-analysis model. With few cohorts, random "
+                             "effects are unstable (default: %(default)s)")
 
     args = parser.parse_args()
     if args.env == "prod" and not (args.startup_kit and args.username):
@@ -245,12 +289,13 @@ def main():
         num_rounds=args.num_rounds,
         train_script="client.py",
         train_args=f"--method {args.method} --trait_type {args.trait_type}",
-        aggregator=GWASMetaAggregator(trait_type=args.trait_type),
+        aggregator=GWASMetaAggregator(trait_type=args.trait_type,
+                                      model=args.model),
     )
     add_experiment_tracking(recipe, tracking_type="tensorboard")
 
-    # Ship the method-specific GWAS wrapper and the shared R QC script, so every
-    # site standardises with identical code rather than a local copy.
+    # Ship the site driver and the shared R QC script, so every site
+    # standardises with identical code rather than a local copy.
     recipe.job.to_clients(ADAPTERS[args.method]["script"])
     recipe.job.to_clients("gwas_cohort_qc_with_gwama.R")
 
