@@ -206,6 +206,13 @@ or paired (`both`) GWAMA analyses for binary and quantitative traits. Paired
 runs also produce a marker-level FFX/RFX comparison. A separate script creates
 matched fixed- and random-effects Manhattan plots.
 
+Before the central run, each site uses
+`Scripts/gwas_cohort_qc_with_gwama.R` to QC its REGENIE, SAIGE, or PLINK
+summary results and produce `<site>.GWAMA.txt.gz`. The command requires an
+explicit mapping from the source columns to chromosome, position, alleles,
+frequency, effect, standard error, sample size, and P-value. See the detailed
+guide for a complete REGENIE example and requirements for other formats.
+
 Quick start for a binary trait:
 
 ```bash

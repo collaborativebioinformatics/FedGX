@@ -21,6 +21,8 @@ separate output directory for each method.
 
 - Linux or WSL with Bash.
 - GWAMA available as `GWAMA` on `PATH`.
+- R with the `optparse` and `data.table` packages for site-level QC and
+  conversion. R is not required if GWAMA-formatted files already exist.
 - Python 3.10 or newer for the comparison and plotting scripts.
 - Matplotlib for Manhattan plots.
 
@@ -95,6 +97,89 @@ runs/<phenotype>/<method>/
 For example, use `--output-dir runs/phenotype/regenie/inputs` and
 `--output-prefix site1` when creating the first site's GWAMA file, or copy the
 site-produced summary file to that location on the central server.
+
+## Create a GWAMA file at each site
+
+Run `Scripts/gwas_cohort_qc_with_gwama.R` at each participating site before
+central meta-analysis. It performs cohort-level QC and writes a compressed
+GWAMA input file without transferring individual-level genotype or phenotype
+data.
+
+The converter does not guess the source software. Inspect the GWAS header and
+map each required concept to its actual column name:
+
+| Concept | Command option | REGENIE example |
+| --- | --- | --- |
+| Chromosome | `--col-chr` | `CHROM` |
+| Position | `--col-pos` | `GENPOS` |
+| Variant ID | `--col-id` | `ID` |
+| Effect allele | `--col-ea` | `ALLELE1` |
+| Non-effect allele | `--col-nea` | `ALLELE0` |
+| Effect-allele frequency | `--col-eaf` | `A1FREQ` |
+| Effect or log odds ratio | `--col-beta` | `BETA` |
+| Standard error | `--col-se` | `SE` |
+| Per-variant sample size | `--col-n` | `N` |
+| P-value or -log10(P) | `--col-p` or `--col-log10p` | `LOG10P` |
+
+For a quantitative REGENIE result, an example site command is:
+
+```bash
+mkdir -p site_outputs/phenotype/regenie
+
+Rscript Scripts/gwas_cohort_qc_with_gwama.R \
+  --input results/regenie_step2_Phen1.regenie.gz \
+  --cohort SITE1 \
+  --build GRCh38 \
+  --trait-type quantitative \
+  --info-threshold 0.30 \
+  --min-n 30 \
+  --min-mac 6 \
+  --remove-palindromic TRUE \
+  --autosomes-only TRUE \
+  --snp-only TRUE \
+  --remove-duplicates TRUE \
+  --filter-test TRUE \
+  --test-value ADD \
+  --col-chr CHROM \
+  --col-pos GENPOS \
+  --col-id ID \
+  --col-ea ALLELE1 \
+  --col-nea ALLELE0 \
+  --col-eaf A1FREQ \
+  --col-beta BETA \
+  --col-se SE \
+  --col-n N \
+  --col-info INFO \
+  --col-log10p LOG10P \
+  --col-test TEST \
+  --col-chisq CHISQ \
+  --output-dir site_outputs/phenotype/regenie \
+  --output-prefix site1
+```
+
+The central input produced by this example is:
+
+```text
+site_outputs/phenotype/regenie/site1.GWAMA.txt.gz
+```
+
+Repeat with `site2`, `site3`, and so on. Transfer only the approved summary
+outputs to the central server, then place them in the chosen central input
+directory.
+
+For a binary trait, set `--trait-type binary`. The column passed to
+`--col-beta` must contain a log odds ratio; the converter calculates OR and its
+95% confidence interval. Do not pass an untransformed OR as `--col-beta`.
+
+For SAIGE and PLINK, use the same command but replace the column mappings with
+the actual headers in those outputs. The input must include effect size (BETA,
+or log OR for a binary trait), SE, EAF, and per-variant N. If a required value
+is absent, add it during an upstream standardization step rather than assigning
+an unrelated column.
+
+Besides the `.GWAMA.txt.gz` file, the site script writes cleaned statistics,
+QC summaries and logs, P-Z and SE-N summaries, and cohort-level P-Z and QQ
+plots. Review the QC log before releasing the GWAMA file for central analysis.
 
 ## Run fixed and random models
 
