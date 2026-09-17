@@ -1,17 +1,40 @@
-# Federated Learning Software for Multi-Tool Genome-Wide Association Studies across Cohort Sites: Introducing FedGX, Product of the Nordic Biobank x NVIDIA Hackathon 
+---
+editor_options: 
+  markdown: 
+    wrap: 72
+---
+
+# Federated Learning Software for Multi-Tool Genome-Wide Association Studies across Cohort Sites: Introducing FedGX, Product of the Nordic Biobank x NVIDIA Hackathon
 
 ## Authors
-Marlene Rietz (1-3), Allan Lind-Thomsen (4), Xiaoping Wu (5), Moh Sallam (6), Pravesh Parekh (7-8)
+
+Marlene Rietz (1-3), Allan Lind-Thomsen (4), Xiaoping Wu (5), Moh Sallam
+(6), Pravesh Parekh (7-8)
 
 ## Affiliations
-Steno Diabetes Center Odense, Odense, Denmark
-P1 Pioneer Center for Artificial Intelligence, University of Copenhagen, Copenhagen Denmar
-Department of Laboratory Medicine, Karolinska Institutet, Stockholm, Sweden
-[INSERT ALLAN]
-Department of Obstetrics and Gynecology,Institute of Clinical Sciences, Sahlgrenska Academy, University of Gothenburg, Gothenburg, Sweden
-Center for Quantitative Genetics and Genomics and Pionner Center for Smartbiomed, Aarhus University
-J. Craig Venter Institute, San Diego, California, USA
-Centre for Precision Psychiatry, University of Oslo, Oslo, Norway
+
+1.  Steno Diabetes Center Odense, Odense, Denmark
+
+2.  P1 Pioneer Center for Artificial Intelligence, University of
+    Copenhagen, Copenhagen Denmark
+
+3.  Department of Laboratory Medicine, Karolinska Institutet, Stockholm,
+    Sweden
+
+4.  [INSERT ALLAN]
+
+5.  Department of Obstetrics and Gynecology,Institute of Clinical
+    Sciences, Sahlgrenska Academy, University of Gothenburg, Gothenburg,
+    Sweden
+
+6.  Center for Quantitative Genetics and Genomics and Pionner Center for
+    Smartbiomed, Aarhus University
+
+7.  J. Craig Venter Institute, San Diego, California, USA
+
+8.  Centre for Precision Psychiatry, University of Oslo, Oslo, Norway
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 ## Abstract
 
@@ -23,7 +46,11 @@ Centre for Precision Psychiatry, University of Oslo, Oslo, Norway
 
 ### Conclusions
 
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
 ## Keywords
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 ## Introduction
 
@@ -31,27 +58,15 @@ Centre for Precision Psychiatry, University of Oslo, Oslo, Norway
 
 ### Ancestral diversity in GWAS
 
-### Parkinson's disease genetics
-
 ### Aims of the hackathon project
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 ## Methods
 
-### Overview of the FedGen workflow
+### Overview of the FedGX workflow
 
-### Simulation framework
-
-#### Population tree and allele frequencies
-
-#### Linkage disequilibrium
-
-#### Shared SNP reference
-
-#### Site genotypes
-
-#### Covariates
-
-### Phenotype simulation with LDAK
+### Phenotype Simulation via Extension of LDAK
 
 #### Heritability and prevalence
 
@@ -81,29 +96,11 @@ Centre for Precision Psychiatry, University of Oslo, Oslo, Norway
 
 ### Software and versions
 
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
 ## Results
 
-### Simulated genotypes
-
-#### Allele frequencies and Hardy–Weinberg equilibrium
-
-#### Linkage disequilibrium by ancestry
-
-#### Population differentiation
-
-### Calibration of association tests
-
-### Detection of shared causal variants
-
-### Detection of ancestry-unique causal variants
-
-### Single-site versus meta-analysis
-
-### Heterogeneity across ancestries
-
-### Runtime and storage
-
-### Federated analysis results
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 ## Discussion
 
@@ -117,19 +114,23 @@ Centre for Precision Psychiatry, University of Oslo, Oslo, Norway
 
 ### Future work
 
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
 ## Conclusions
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 ## Data availability
 
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
+
 ## Code availability
 
-## Author contributions
-
-## Acknowledgements
-
-## Competing interests
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 ## References
+
+\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 ## Supplementary material
 
