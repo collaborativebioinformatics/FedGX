@@ -203,7 +203,7 @@ The federated job handles:
 
 - Make a QC for individual cohort GWAS summary statistics (from REGENIE/SAIGE/...) and convert it to GWAMA input format
 
-'''
+'''  
   Rscript gwas_cohort_qc.R \
   --input cohort1.regenie.gz \
   --cohort COHORT1 \
@@ -231,20 +231,20 @@ The federated job handles:
   --col-log10p LOG10P \
   --col-test TEST \
   --col-chisq CHISQ \
-  --output-prefix test/COHORT1
+  --output-prefix test/COHORT1  
 '''
 - Prepare input for GWAMA
   
-  '''
-    For Binary/case-control:
+  '''  
+    For Binary/case-control:  
   ./run_gwama.sh or meta_output \
        cohort1.GWAMA.txt.gz \
        cohort2.GWAMA.txt.gz
 
-  For Quantitative:
+  For Quantitative:  
  ./run_gwama.sh qt meta_output \
        cohort1.GWAMA.txt.gz \
-       cohort2.GWAMA.txt.gz
+       cohort2.GWAMA.txt.gz  
   '''
   
 - Run GWAMA
