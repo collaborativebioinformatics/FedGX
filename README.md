@@ -3,10 +3,10 @@
 
 # Summary
 
-At the Nordic Biobank x NVIDIA Hackathon, we aim to develop software for federated GWAS across three sites. 
-For development, we test this approach in the HUNT Cloud and across two BREV sites. 
+### At the Nordic Biobank x NVIDIA Hackathon, we aimed to develop software for federated GWAS across three sites. 
+For development, we tested this approach in the HUNT Cloud and across two BREV sites. 
 
-We will extend currently available code from the FedGen repository. 
+We extended the currently available code from the FedGen repository. 
 https://github.com/collaborativebioinformatics/FedGen
 
 ____________________________
