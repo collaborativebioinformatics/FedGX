@@ -108,50 +108,10 @@ cd <client_name>
 
 Check logs to confirm successful connection to the NVFLARE server/dashboard.
 
----
-
-## 4. Install AWS CLI on Each Brev Instance
-
-From your **home directory**:
-
-```bash
-curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
-unzip awscliv2.zip
-sudo ./aws/install
-```
-
-Verify:
-
-```bash
-aws --version
-```
 
 ---
 
-### 4.1 Configure AWS Credentials (Securely)
-
-```bash
-aws configure
-```
-
-Use **one** of the following secure approaches:
-
-* IAM role attached to the instance (**recommended**)
-* Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
-* AWS credentials file
-
-Example (DO NOT hardcode secrets):
-
-```
-AWS Access Key ID:     <YOUR_ACCESS_KEY>
-AWS Secret Access Key: <YOUR_SECRET_KEY>
-Default region name:  None
-Default output format: None
-```
-
----
-
-## 5. Clone FedGX Repository
+## 4. Clone FedGX Repository
 
 ```bash
 git clone https://github.com/collaborativebioinformatics/FedGX
@@ -160,7 +120,7 @@ chmod +x FedGen/scripts/*.sh
 
 ---
 
-## 6. Download Site Data from S3
+## 5. Download Site Data from S3
 
 [SPECIFY METHOD HERE; SYNTHETIC DATA CODE AVAILABLE]
 
@@ -168,7 +128,7 @@ chmod +x FedGen/scripts/*.sh
 
 ---
 
-## 7. Run Regenie Per Site (Outside NVFLARE)
+## 6. Run Regenie Per Site (Outside NVFLARE)
 
 Run Regenie independently per site (not through NVFLARE) to verify all dependencies are working:
 
@@ -185,7 +145,7 @@ Monitor logs and outputs to confirm successful completion.
 
 ---
 
-## 8. Run Federated GWAS Job (NVFLARE)
+## 7. Run Federated GWAS Job (NVFLARE)
 
 Instead of running REGENIE independently on each site and manually aggregating results, you can submit a federated GWAS job that automates the entire workflow across all sites using NVIDIA FLARE.
 
@@ -199,7 +159,7 @@ The federated job handles:
 
 ---
 
-## 9. Run central GWAMA meta-analysis
+## 8. Run central GWAMA meta-analysis
 
 The central runner supports fixed-effect (`fixed`), random-effects (`random`),
 or paired (`both`) GWAMA analyses for binary and quantitative traits. Paired
@@ -240,7 +200,7 @@ interpretation, testing, and troubleshooting.
 
 ---
 
-## 10. Notes & Best Practices
+## 9. Notes & Best Practices
 
 * Use **one Brev instance per NVFLARE client**
 * Always run NVFLARE client inside a virtual environment
