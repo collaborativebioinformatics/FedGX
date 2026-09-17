@@ -39,7 +39,7 @@ ____________________________
 ____________________________
 
 # Flowchart
-  ![Federated GWAS architecture](FederationFigure_MR.png)
+  ![Federated GWAS architecture](docs/FederationFigure_MR.png)
 ____________________________
  
 # Team members
