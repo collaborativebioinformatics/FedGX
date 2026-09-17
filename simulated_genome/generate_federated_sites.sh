@@ -90,7 +90,7 @@ echo "Step 2: Generating Parkinson's phenotypes..."
 $LDAK \
   --make-phenos ${OUTPUT_DIR}/site${site}_pheno \
   --bfile ${OUTPUT_DIR}/site${site}_geno \
-  --her 0.25 \
+  --her 0.5 \
   --prevalence 0.01 \
   --num-causals ${num_causals} \
   --causals ${REF_DIR}/causals_${anc}.txt \
