@@ -307,9 +307,6 @@ ls -lh data/simulated_sites/site3/
 # - site3_geno.covar (~5-10 MB)
 ```
 
-> [!WARNING]
-> This points at the `FedGen` repo's `download_site_from_s3.sh`, which doesn't exist in `FedGX`/`Scripts/`. Confirm whether real-data users should be pointed at FedGen instead, or whether this script needs to be ported into this repo.
-
 ### REGENIE analysis workflow
 
 > [!NOTE]
