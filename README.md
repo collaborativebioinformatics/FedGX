@@ -1,34 +1,5 @@
 # FEDGX: Federated Learning Software for Multi-Tool Genome-Wide Association Studies across Cohort Sites: Product of the Nordic Biobank x NVIDIA Hackathon
 
-# Contributors
-
-Marlene Rietz (1-3), Allan Lind-Thomsen (4), Xiaoping Wu (5), Moh Sallam
-(6), Pravesh Parekh (7-8)
-
-## Affiliations
-
-1.  Steno Diabetes Center Odense, Odense, Denmark
-
-2.  P1 Pioneer Center for Artificial Intelligence, University of
-    Copenhagen, Copenhagen Denmark
-
-3.  Department of Laboratory Medicine, Karolinska Institutet, Stockholm,
-    Sweden
-
-4.  [INSERT ALLAN]
-
-5.  Department of Obstetrics and Gynecology,Institute of Clinical
-    Sciences, Sahlgrenska Academy, University of Gothenburg, Gothenburg,
-    Sweden
-
-6.  Center for Quantitative Genetics and Genomics and Pionner Center for
-    Smartbiomed, Aarhus University
-
-7.  J. Craig Venter Institute, San Diego, California, USA
-
-8.  Centre for Precision Psychiatry, University of Oslo, Oslo, Norway
-
-
 # Summary
 
 At the Nordic Biobank x NVIDIA Hackathon, we aim to develop software for federated GWAS across three sites. 
@@ -465,6 +436,43 @@ MOH?
 # License
 
 Data and scripts: MIT License (see repository root)
+
+# Contributors
+
+---
+
+# Team
+
+Marlene Rietz (1-3)
+Allan Lind-Thomsen (4)
+Xiaoping Wu (5)
+Moh Sallam
+(6)
+Pravesh Parekh (7-8)
+
+## Affiliations
+
+1.  Steno Diabetes Center Odense, Odense, Denmark
+
+2.  P1 Pioneer Center for Artificial Intelligence, University of
+    Copenhagen, Copenhagen Denmark
+
+3.  Department of Laboratory Medicine, Karolinska Institutet, Stockholm,
+    Sweden
+
+4.  [INSERT ALLAN]
+
+5.  Department of Obstetrics and Gynecology,Institute of Clinical
+    Sciences, Sahlgrenska Academy, University of Gothenburg, Gothenburg,
+    Sweden
+
+6.  Center for Quantitative Genetics and Genomics and Pionner Center for
+    Smartbiomed, Aarhus University
+
+7.  J. Craig Venter Institute, San Diego, California, USA
+
+8.  Centre for Precision Psychiatry, University of Oslo, Oslo, Norway
+
 
 
 
