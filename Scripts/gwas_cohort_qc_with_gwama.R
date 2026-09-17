@@ -742,11 +742,17 @@ run_gwas_qc <- function(
         POS
     )]
 
+    # The key must not depend on which allele the tool happened to treat as
+    # the effect allele. If one cohort reports EA=A/NEA=G and another
+    # EA=G/NEA=A for the same variant, an EA:NEA key produces two different
+    # strings, GWAMA sees two different markers, and every variant comes back
+    # with n_studies = 1. Sorting the alleles in the key fixes that; the EA
+    # and NEA columns still carry the direction, which is what GWAMA aligns on.
     d[, VARIANT_ID := paste(
         CHR,
         POS,
-        EA,
-        NEA,
+        pmin(EA, NEA),
+        pmax(EA, NEA),
         sep = ":"
     )]
 
