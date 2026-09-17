@@ -35,7 +35,7 @@ export PROGRAM="${PROGRAM:-}"
 # site specific variables
 
 #Use Data path from environment variable if set, otherwise use default
-export DATA_PATH_DEF="Data/"
+DATA_PATH_DEF="${HOME}/Data/"
 
 
 if [ -z "${DATAPATH:-}" ]; then
@@ -49,12 +49,22 @@ export DATA_PATH
 
 
 #Setting up the environment for GWAS analysis
-export POPULATIONPATH="${DATA_PATH}/${POPULATIONID}/"
+export POPULATIONPATH="${HOME}/Data/${POPULATIONID}"
 
 if [ "${PROGRAM}" = "regenie" ]; then
   echo "Running Regenie workflow"
   # Add Regenie-specific commands here
-  echo "PROGRAM value: ${PROGRAM} is not yet supported"
+    echo "Running Regenie workflow"
+  # Add Regenie-specific commands here
+  # regenie --step 1 --bed site1_geno --covarFile site1_geno.covar --phenoFile site1_pheno.breed --bsize=100 --out testrun.txt
+  regenie --step 1\
+          --bed ${POPULATIONPATH}/site1_geno \
+          --covarFile ${POPULATIONPATH}/site1_geno.covar \
+          --phenoFile ${POPULATIONPATH}/site1_pheno.breed \
+          --bsize=100 \
+          --out testrun
+
+
 
 elif [ "${PROGRAM}" = "plink" ] ; then
   echo "Running PLINK workflow"
