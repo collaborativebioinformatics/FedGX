@@ -5,8 +5,8 @@
 # Usage: ./scripts/generate_federated_sites.sh <site_number>
 # Example: ./scripts/generate_federated_sites.sh 1
 
-samples=(100000 95000 110000 88000 105000 92000 98000 103000 97000 101000)
-nsnps=(500000 480000 520000 450000 510000 490000 505000 495000 515000 485000)
+samples=(100000 95000 110000)
+nsnps=(500000 480000 520000)
 
 # Check if site number is provided
 if [ $# -eq 0 ]; then
