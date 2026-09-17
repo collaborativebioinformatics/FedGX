@@ -199,55 +199,37 @@ The federated job handles:
 
 ---
 
-## 9. Run GWAS Meta-Analysis using GWAMA from GWAS results generated across sites
+## 9. Run central GWAMA meta-analysis
 
-- Make a QC for individual cohort GWAS summary statistics (from REGENIE/SAIGE/...) and convert it to GWAMA input format
+The central runner supports fixed-effect (`fixed`), random-effects (`random`),
+or paired (`both`) GWAMA analyses for binary and quantitative traits. Paired
+runs also produce a marker-level FFX/RFX comparison. A separate script creates
+matched fixed- and random-effects Manhattan plots.
 
-'''  
-  Rscript gwas_cohort_qc.R \
-  --input cohort1.regenie.gz \
-  --cohort COHORT1 \
-  --build GRCh38 \
-  --trait-type quantitative \
-  --info-threshold 0.30 \
-  --min-n 30 \
-  --min-mac 6 \
-  --remove-palindromic TRUE \
-  --autosomes-only TRUE \
-  --snp-only TRUE \
-  --remove-duplicates TRUE \
-  --filter-test TRUE \
-  --test-value ADD \
-  --col-chr CHROM \
-  --col-pos GENPOS \
-  --col-id ID \
-  --col-ea ALLELE1 \
-  --col-nea ALLELE0 \
-  --col-eaf A1FREQ \
-  --col-beta BETA \
-  --col-se SE \
-  --col-n N \
-  --col-info INFO \
-  --col-log10p LOG10P \
-  --col-test TEST \
-  --col-chisq CHISQ \
-  --output-prefix test/COHORT1  
-'''
-- Run GWAMA
-  
-  '''  
-    For Binary/case-control:  
-  ./run_gwama.sh or meta_output \
-       cohort1.GWAMA.txt.gz \
-       cohort2.GWAMA.txt.gz
+Quick start for a binary trait:
 
-  For Quantitative:  
- ./run_gwama.sh qt meta_output \
-       cohort1.GWAMA.txt.gz \
-       cohort2.GWAMA.txt.gz  
-  '''
- 
-- Interpret Output
+```bash
+mkdir -p runs/phenotype/regenie/inputs
+
+bash Scripts/run_gwama.sh or --model both \
+  runs/phenotype/regenie/meta \
+  runs/phenotype/regenie/inputs/site1.GWAMA.txt.gz \
+  runs/phenotype/regenie/inputs/site2.GWAMA.txt.gz \
+  runs/phenotype/regenie/inputs/site3.GWAMA.txt.gz
+
+python3 Scripts/plot_gwama_manhattan.py \
+  --fixed runs/phenotype/regenie/meta.fixed.out \
+  --random runs/phenotype/regenie/meta.random.out \
+  --output-prefix runs/phenotype/regenie/meta
+```
+
+Run REGENIE, SAIGE, and PLINK results as separate meta-analyses; do not mix
+methods in one GWAMA run. All contributing sites must use the same phenotype,
+trait definition, and genome build.
+
+See [Central GWAMA fixed/random analysis](docs/gwama_fixed_random.md) for
+installation checks, input requirements, complete commands, outputs,
+interpretation, testing, and troubleshooting.
 
 ---
 
@@ -362,50 +344,6 @@ INSERT
 
 
 
-
-# Running GWAMA Meta-Analysis
-
----
-
-## Meta-Analysis Workflow (Regenie Format)
-
-### Step 1: Convert REGENIE Output to GWAMA Format
-
-Each site's results must be converted to GWAMA input format:
-
-
-Repeat for all 3 sites (site1 through site10).
-
----
-
-### Step 2: Create Input File List
-
-Create a file listing all site-specific GWAMA input files:
-
-
-
----
-
-### Step 3: Run GWAMA
-
-
----
-
-### Step 4: Interpret Output
-
-GWAMA produces `FILENAME` with the following columns:
-MOH?
-
-**Key columns:**
-
-**Interpreting heterogeneity:**
-
-
----
-
-
-
----
 
 # Technologies
 
