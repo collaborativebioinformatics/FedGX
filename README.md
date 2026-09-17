@@ -1,4 +1,5 @@
-# FEDGX: Federated Learning Software for Multi-Tool Genome-Wide Association Studies across Cohort Sites: Product of the Nordic Biobank x NVIDIA Hackathon
+# FEDGX: Federated Learning Software for Multi-Tool Genome-Wide Association Studies across Cohort Sites
+## Product of the Nordic Biobank x NVIDIA Hackathon
 
 # Summary
 
