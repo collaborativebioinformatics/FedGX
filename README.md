@@ -31,9 +31,7 @@ ____________________________
 
 # Quickstart
 
-## 1. Start NVFLARE Dashboard and FL Server on AWS
-
----
+## 1. Start NVFLARE Dashboard and FL Server
 
 ## 2. Start NVFLARE Client on Brev and HUNT Cloud
 
@@ -48,8 +46,6 @@ On the **Brev website**:
   * CPU: **16 cores**
   * RAM: **64 GB**
 
----
-
 ### 2.2 Connect to the Instance
 
 ```bash
@@ -61,8 +57,6 @@ Use terminal multiplexer to ensure connection persistence (Optional but recommen
 ```bash
 tmux new -s nvflare
 ```
-
----
 
 ### 2.3 Python Environment Setup
 
@@ -78,8 +72,6 @@ Verify installation:
 ```bash
 nvflare --version
 ```
-
----
 
 ## 3. Copy and Start NVFLARE Client Startup Kit
 
@@ -110,8 +102,6 @@ cd <client_name>
 Check logs to confirm successful connection to the NVFLARE server/dashboard.
 
 
----
-
 ## 4. Clone FedGX Repository
 
 ```bash
@@ -119,15 +109,11 @@ git clone https://github.com/collaborativebioinformatics/FedGX
 chmod +x FedGen/scripts/*.sh
 ```
 
----
 
 ## 5. Download Site Data from S3
 
 [SPECIFY METHOD HERE; SYNTHETIC DATA CODE AVAILABLE]
 
-
-
----
 
 ## 6. Run Regenie Per Site (Outside NVFLARE)
 
@@ -144,7 +130,6 @@ Monitor logs and outputs to confirm successful completion.
 - Step 1 (LOCO model): 15-30 min
 - Step 2 (association testing): 10-20 min
 
----
 
 ## 7. Run Federated GWAS Job (NVFLARE)
 
@@ -158,7 +143,6 @@ The federated job handles:
 
 **For complete instructions on submitting federated GWAS jobs, see [`jobs/fed_gwas/README.md`](jobs/fed_gwas/README.md).**
 
----
 
 ## 8. Run central GWAMA meta-analysis
 
@@ -199,8 +183,6 @@ See [Central GWAMA fixed/random analysis](docs/gwama_fixed_random.md) for
 installation checks, input requirements, complete commands, outputs,
 interpretation, testing, and troubleshooting.
 
----
-
 ## 9. Notes & Best Practices
 
 * Use **one Brev instance per NVFLARE client**
@@ -214,9 +196,6 @@ interpretation, testing, and troubleshooting.
 * Use `tmux` or `screen` to keep long‑running jobs alive
 
 ---
-
----
-
 # Data Specifications
 
 ## Genotypes
