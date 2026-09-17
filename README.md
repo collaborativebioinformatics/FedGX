@@ -233,7 +233,7 @@ The federated job handles:
   --col-chisq CHISQ \
   --output-prefix test/COHORT1  
 '''
-- Prepare input for GWAMA
+- Run GWAMA
   
   '''  
     For Binary/case-control:  
@@ -246,8 +246,7 @@ The federated job handles:
        cohort1.GWAMA.txt.gz \
        cohort2.GWAMA.txt.gz  
   '''
-  
-- Run GWAMA
+ 
 - Interpret Output
 
 ---
