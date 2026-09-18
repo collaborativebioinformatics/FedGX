@@ -21,6 +21,8 @@ from nvflare.app_opt.pt.recipes.fedavg import FedAvgRecipe
 from nvflare.client import FLModel
 from nvflare.recipe import ProdEnv, SimEnv, add_experiment_tracking
 
+from model import DummyModel
+
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_TOOLS_ROOT = "/home/ubuntu/tools"
 WRAPPER_NAME = "run_gwama.sh"
@@ -79,6 +81,7 @@ class GWASMetaAggregator(ModelAggregator):
         self.output_folder = output_folder
 
         self.received_params_type = None
+        self.passthrough_params = None
         self.output_dir = None
         self.accepted = []          # (dataset_id, path)
         self.rejected = []          # (site_name, reason)
@@ -103,6 +106,9 @@ class GWASMetaAggregator(ModelAggregator):
     def accept_model(self, model: FLModel):
         if self.received_params_type is None:
             self.received_params_type = model.params_type
+            # Kept only so the aggregated model has a valid state dict for the
+            # persistor; nothing here is trained.
+            self.passthrough_params = model.params
 
         if self.output_dir is None:
             self.output_dir = os.path.join(_run_dir(self.fl_ctx),
@@ -118,7 +124,7 @@ class GWASMetaAggregator(ModelAggregator):
             print(f"REJECTED {site}: {reason}")
             self.rejected.append((site, reason))
 
-        if model.params.get("SUCCESS") is False:
+        if meta.get("success") is False:
             return reject(meta.get("error_message", "client reported failure"))
 
         content = meta.get("results_file", "")
@@ -180,18 +186,20 @@ class GWASMetaAggregator(ModelAggregator):
             raise RuntimeError(f"run_gwama.sh exited {result.returncode}")
 
         return FLModel(
-            params={
+            params=self.passthrough_params,
+            params_type=self.received_params_type,
+            meta={
                 "META_ANALYSIS_COMPLETED": True,
                 "N_SITES": len(files),
                 "N_REJECTED": len(self.rejected),
             },
-            params_type=self.received_params_type,
         )
 
     def reset_stats(self):
         self.accepted = []
         self.rejected = []
         self.received_params_type = None
+        self.passthrough_params = None
 
 
 def define_parser():
@@ -227,6 +235,7 @@ def main():
 
     recipe = FedAvgRecipe(
         name="fed_gwas",
+        model=DummyModel(),
         min_clients=args.n_clients,
         num_rounds=args.num_rounds,
         train_script="client.py",
