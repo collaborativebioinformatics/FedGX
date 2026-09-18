@@ -23,7 +23,7 @@ from nvflare.recipe import ProdEnv, SimEnv, add_experiment_tracking
 
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_TOOLS_ROOT = "/home/ubuntu/tools"
-GWAMA_WRAPPER = os.path.join(SCRIPT_DIR, "run_gwama.sh")
+WRAPPER_NAME = "run_gwama.sh"
 
 # Every method uses the same site driver, which dispatches on PROGRAM.
 METHODS = ("regenie", "saige")
@@ -42,6 +42,29 @@ TRAIT_TYPES = {
 def _run_dir(fl_ctx: FLContext) -> str:
     workspace = fl_ctx.get_prop(FLContextKey.WORKSPACE_OBJECT)
     return workspace.get_run_dir(fl_ctx.get_job_id())
+
+
+def _find_wrapper():
+    """
+    Locate run_gwama.sh at run time.
+
+    In production the aggregator executes inside the job's custom directory on
+    the FL server, not in the repo it was submitted from, so a path baked in
+    at import time points at the wrong place.
+    """
+    candidates = [
+        os.environ.get("FEDGX_GWAMA_WRAPPER"),
+        os.path.join(SCRIPT_DIR, WRAPPER_NAME),
+        os.path.join(os.getcwd(), WRAPPER_NAME),
+        os.path.join(DEFAULT_TOOLS_ROOT, WRAPPER_NAME),
+    ]
+    for path in candidates:
+        if path and os.path.isfile(path):
+            return path
+    raise FileNotFoundError(
+        f"{WRAPPER_NAME} not found in {[c for c in candidates if c]}; "
+        "set FEDGX_GWAMA_WRAPPER"
+    )
 
 
 class GWASMetaAggregator(ModelAggregator):
@@ -133,16 +156,14 @@ class GWASMetaAggregator(ModelAggregator):
                 f"only {len(self.accepted)} usable site file(s); "
                 "a meta-analysis needs at least 2"
             )
-        if not os.path.isfile(GWAMA_WRAPPER):
-            raise FileNotFoundError(f"missing {GWAMA_WRAPPER}")
-
+        wrapper = _find_wrapper()
         mode, _ = TRAIT_TYPES[self.trait_type]
         output_root = os.path.join(self.output_dir, "gwama")
 
         # Sorted: GWAMA takes the reference allele from the first file in the
         # list, so the order must not depend on which site replied first.
         files = [path for _, path in sorted(self.accepted)]
-        cmd = ["bash", GWAMA_WRAPPER, mode, "--model", self.model,
+        cmd = ["bash", wrapper, mode, "--model", self.model,
                output_root, *files]
 
         env = os.environ.copy()
@@ -220,6 +241,10 @@ def main():
     # standardises with identical code.
     recipe.job.to_clients(SITE_SCRIPT)
     recipe.job.to_clients(QC_SCRIPT)
+
+    # The aggregator runs on the FL server inside the job directory, so the
+    # meta-analysis wrapper has to travel with it.
+    recipe.job.to_server(WRAPPER_NAME)
 
     if args.env == "sim":
         print(f"Simulation environment, {args.n_clients} clients")
