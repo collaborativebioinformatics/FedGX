@@ -426,7 +426,7 @@ Data and scripts: MIT License (see repository root).
 | Marlene Rietz      | 1–3      | Steno Diabetes Center Odense, Odense, Denmark; P1 Pioneer Center for Artificial Intelligence, University of Copenhagen, Copenhagen, Denmark; Department of Laboratory Medicine, Karolinska Institutet, Stockholm, Sweden |
 | Allan Lind-Thomsen | 4        | OPEN, Odense University Hospital, Denmark                                                                                                                                                                                |
 | Xiaoping Wu        | 5        | Department of Obstetrics and Gynecology, Institute of Clinical Sciences, Sahlgrenska Academy, University of Gothenburg, Gothenburg, Sweden                                                                               |
-| Moh Sallam         | 6        | Center for Quantitative Genetics and Genomics and Pioneer Center for Smartbiomed, Aarhus University                                                                                                                      |
+| Moh Sallam         | 6        | Center for Quantitative Genetics and Genomics and Pioneer Center for SMARTbiomed, Aarhus University, Denmark                                                                                                                      |
 | Pravesh Parekh     | 7–8      | J. Craig Venter Institute, San Diego, California, USA; Centre for Precision Psychiatry, University of Oslo, Oslo, Norway                                                                                                 |
 with thanks to Ziyue Xu and Holger Roth from NVIDIA!
 ---
