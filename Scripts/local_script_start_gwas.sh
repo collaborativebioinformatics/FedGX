@@ -25,6 +25,7 @@ if [ -f "${CONFIG_FILE}" ]; then
       POPULATIONID)  CFG_POPULATIONID="${value}" ;;
       TRAITTYPE)     CFG_TRAITTYPE="${value}" ;;
       BUILD)         CFG_BUILD="${value}" ;;
+      REGENIE)       CFG_REGENIE="${value}" ;;
     esac
   done < <(python3 - "${CONFIG_FILE}" <<'PY'
 import json, shlex, sys
@@ -49,7 +50,7 @@ PROGRAM="${PROGRAM:-${CFG_PROGRAM:-}}"
 POPULATIONID="${POPULATIONID:-${CFG_POPULATIONID:-}}"
 TRAITTYPE="${TRAITTYPE:-${CFG_TRAITTYPE:-binary}}"
 BUILD="${BUILD:-${CFG_BUILD:-GRCh38}}"
-
+REGENIE="${REGENIE:-${CFG_REGENIE:-}}"
 if [ -z "${PROGRAM}" ]; then
   echo "ERROR: PROGRAM is not set (config key 'program' or env PROGRAM)." >&2
   exit 1
@@ -87,7 +88,7 @@ mkdir -p "${WORKDIR}"
 
 # Binaries: client.py resolves these from tools.json and passes them in.
 # Fall back to whatever is on PATH.
-TOOL_BIN="${TOOL_BIN:-}"
+TOOL_BIN="${REGENIE:-}"
 RSCRIPT_BIN="${RSCRIPT_BIN:-Rscript}"
 
 QC_SCRIPT="${SCRIPT_DIR}/gwas_cohort_qc_with_gwama.R"
