@@ -122,14 +122,9 @@ chmod +x FedGX/Scripts/*.sh
 
 Two options, depending on your setup:
 
-- **Real cohort data:** download your assigned site from S3 (see your site coordinator for credentials and the bucket path).
-- **Synthetic data:** generate a full synthetic multi-ancestry dataset locally with `Scripts/generateData.sh` — no S3 access needed. See
+- **Real cohort data** 
+- **Synthetic data** generate a full synthetic multi-ancestry dataset locally with `Scripts/generateData.sh` — no S3 access needed. See
     [Synthetic Data Specifications](#synthetic-data-specifications) below for exactly what it produces.
-
-> [!WARNING] No S3 download script currently exists in this repo
-> (`scripts/download_site_from_s3.sh`, referenced further down, isn't
-> present). Add it, or replace the reference below with the real
-> download method.
 
 Configure the local site client to obtain metadata: create `~/fedgx_config/config.json` with the keys `Scripts/local_script_start_gwas.sh` reads at startup:
 
