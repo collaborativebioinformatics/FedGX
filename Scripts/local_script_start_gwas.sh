@@ -13,7 +13,7 @@
 set -euo pipefail
 
 SCRIPT_DIR="$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)"
-CONFIG_FILE="${SCRIPT_DIR}/test_configuration.json"
+CONFIG_FILE="${HOME}/fedgx_config/config.json"
 
 # ---------------------------------------------------------------------------
 # Configuration: JSON file first, environment overrides it
