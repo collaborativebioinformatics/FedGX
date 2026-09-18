@@ -1,0 +1,1500 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FedGX Explorer - Federated GWAS</title>
+<style>
+  :root {
+    color-scheme: light;
+    --page:        #eef1f4;
+    --surface:     #ffffff;
+    --surface-2:   #f6f8fa;
+    --ink-1:       #16202b;
+    --ink-2:       #4c5b6b;
+    --ink-3:       #8a97a6;
+    --border:      #dde3e9;
+    --border-2:    #cdd6de;
+    --accent:      #0064a6;
+    --accent-ink:  #ffffff;
+    --accent-wash: #0064a61a;
+    --accent-wash-2: #0064a62e;
+    --good:        #506006;
+    --warning:     #935600;
+    --serious:     #d54e12;
+    --critical:    #da0046;
+    --brand-green: #86a10b;
+    --brand-green-wash: #86a10b1a;
+    --shadow:      0 8px 28px rgba(20,30,40,0.14), 0 1px 3px rgba(20,30,40,0.08);
+    --radius-s:    6px;
+    --radius-m:    10px;
+    --radius-l:    16px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:where(:not([data-theme="light"])) {
+      color-scheme: dark;
+      --page:        #0f1417;
+      --surface:     #171d22;
+      --surface-2:   #1d242a;
+      --ink-1:       #eef2f5;
+      --ink-2:       #aab6c0;
+      --ink-3:       #76828d;
+      --border:      #2a333a;
+      --border-2:    #38434c;
+      --accent:      #8ac2e6;
+      --accent-ink:  #072033;
+      --accent-wash: #8ac2e626;
+      --accent-wash-2: #8ac2e63d;
+      --good:        #a4b848;
+      --warning:     #f09d26;
+      --serious:     #dd7141;
+      --critical:    #e55181;
+      --brand-green: #a4b848;
+      --brand-green-wash: #a4b84826;
+      --shadow:      0 10px 30px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.3);
+    }
+  }
+  :root[data-theme="dark"] {
+    color-scheme: dark;
+    --page:        #0f1417;
+    --surface:     #171d22;
+    --surface-2:   #1d242a;
+    --ink-1:       #eef2f5;
+    --ink-2:       #aab6c0;
+    --ink-3:       #76828d;
+    --border:      #2a333a;
+    --border-2:    #38434c;
+    --accent:      #8ac2e6;
+    --accent-ink:  #072033;
+    --accent-wash: #8ac2e626;
+    --accent-wash-2: #8ac2e63d;
+    --good:        #a4b848;
+    --warning:     #f09d26;
+    --serious:     #dd7141;
+    --critical:    #e55181;
+    --brand-green: #a4b848;
+    --brand-green-wash: #a4b84826;
+    --shadow:      0 10px 30px rgba(0,0,0,0.45), 0 1px 3px rgba(0,0,0,0.3);
+  }
+  :root[data-theme="light"] {
+    color-scheme: light;
+    --page:        #eef1f4;
+    --surface:     #ffffff;
+    --surface-2:   #f6f8fa;
+    --ink-1:       #16202b;
+    --ink-2:       #4c5b6b;
+    --ink-3:       #8a97a6;
+    --border:      #dde3e9;
+    --border-2:    #cdd6de;
+    --accent:      #0064a6;
+    --accent-ink:  #ffffff;
+    --accent-wash: #0064a61a;
+    --accent-wash-2: #0064a62e;
+    --good:        #506006;
+    --warning:     #935600;
+    --serious:     #d54e12;
+    --critical:    #da0046;
+    --brand-green: #86a10b;
+    --brand-green-wash: #86a10b1a;
+    --shadow:      0 8px 28px rgba(20,30,40,0.14), 0 1px 3px rgba(20,30,40,0.08);
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    background: var(--page);
+    color: var(--ink-1);
+    font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
+    font-size: 14px;
+    line-height: 1.45;
+    -webkit-font-smoothing: antialiased;
+  }
+  #app { max-width: 1400px; margin: 0 auto; padding: 18px 22px 60px; }
+
+  a { color: var(--accent); }
+  button { font-family: inherit; }
+  code { background: var(--surface-2); border-radius: 4px; padding: 1px 5px; font-size: 0.92em; }
+  ::selection { background: var(--accent-wash-2); }
+
+  /* ---------- header ---------- */
+  .topbar {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 20px;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 14px;
+  }
+  .brand h1 {
+    margin: 0;
+    font-size: 21px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+  }
+  .brand p {
+    margin: 3px 0 0;
+    font-size: 12.5px;
+    color: var(--ink-2);
+    max-width: 700px;
+  }
+  .topbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .search-wrap { position: relative; width: 300px; }
+  .search-input {
+    width: 100%;
+    padding: 8px 12px 8px 32px;
+    border-radius: var(--radius-m);
+    border: 1px solid var(--border-2);
+    background: var(--surface);
+    color: var(--ink-1);
+    font-size: 13px;
+    font-family: inherit;
+    outline: none;
+  }
+  .search-input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-wash); }
+  .search-icon {
+    position: absolute; left: 10px; top: 50%; transform: translateY(-50%);
+    width: 14px; height: 14px; color: var(--ink-3); pointer-events: none;
+  }
+  .search-results {
+    position: absolute; top: calc(100% + 6px); left: 0; right: 0;
+    background: var(--surface); border: 1px solid var(--border-2);
+    border-radius: var(--radius-m); box-shadow: var(--shadow);
+    max-height: 320px; overflow-y: auto; z-index: 60; display: none;
+  }
+  .search-results.open { display: block; }
+  .search-result-row {
+    display: flex; align-items: center; gap: 8px;
+    padding: 8px 12px; cursor: pointer; font-size: 12.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .search-result-row:last-child { border-bottom: none; }
+  .search-result-row:hover, .search-result-row.active-kb { background: var(--surface-2); }
+  .search-result-swatch { width: 9px; height: 9px; border-radius: 50%; flex: none; }
+  .search-result-name { flex: 1; color: var(--ink-1); font-variant-numeric: tabular-nums; }
+  .search-result-domain { color: var(--ink-3); font-size: 11px; }
+
+  .icon-btn {
+    width: 34px; height: 34px; border-radius: var(--radius-m);
+    border: 1px solid var(--border-2); background: var(--surface);
+    color: var(--ink-2); display: flex; align-items: center; justify-content: center;
+    cursor: pointer;
+  }
+  .icon-btn:hover { color: var(--ink-1); border-color: var(--ink-3); }
+  .icon-btn svg { width: 16px; height: 16px; }
+
+  /* ---------- tabs ---------- */
+  .tabstrip {
+    display: flex; align-items: center; gap: 4px;
+    overflow-x: auto; padding-bottom: 4px; margin-bottom: 16px;
+    scrollbar-width: thin;
+  }
+  .tab-btn {
+    flex: none;
+    padding: 8px 14px;
+    border-radius: 999px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: var(--ink-2);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 6px;
+  }
+  .tab-btn:hover { background: var(--surface-2); color: var(--ink-1); }
+  .tab-btn.active {
+    background: var(--accent); color: var(--accent-ink); font-weight: 700;
+  }
+
+  /* ---------- filter chips ---------- */
+  .filterbar {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+    margin-bottom: 14px;
+  }
+  .filterbar .flabel { font-size: 11.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--ink-3); margin-right: 2px; }
+  .chip {
+    display: flex; align-items: center; gap: 6px;
+    padding: 5px 10px 5px 8px;
+    border-radius: 999px;
+    border: 1px solid var(--border-2);
+    background: var(--surface);
+    font-size: 12px; color: var(--ink-2);
+    cursor: pointer; user-select: none;
+  }
+  .chip .swatch-dot { width: 10px; height: 10px; border-radius: 50%; flex: none; display: block; }
+  .chip.off { opacity: 0.4; }
+  .chip:hover { border-color: var(--ink-3); }
+  .chip-reset { font-size: 11.5px; color: var(--accent); background: none; border: none; cursor: pointer; padding: 4px 6px; font-family: inherit; }
+
+  /* ---------- cards ---------- */
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-l);
+    padding: 16px 18px 18px;
+    margin-bottom: 16px;
+  }
+  .card-head {
+    display: flex; align-items: baseline; justify-content: space-between;
+    gap: 12px; margin-bottom: 10px; flex-wrap: wrap;
+  }
+  .card-head h2 { font-size: 15px; margin: 0; font-weight: 700; }
+  .card-head .sub { font-size: 12px; color: var(--ink-3); }
+  .card-note { font-size: 11.5px; color: var(--ink-3); margin-top: 8px; }
+
+  /* ---------- legend ---------- */
+  .legend-row { display: flex; flex-wrap: wrap; gap: 10px 16px; font-size: 11.5px; color: var(--ink-2); }
+  .legend-item { display: flex; align-items: center; gap: 5px; }
+  .legend-item .swatch-dot { width: 10px; height: 10px; border-radius: 50%; }
+
+  /* ---------- tooltip ---------- */
+  .viz-tooltip {
+    position: fixed; z-index: 500; pointer-events: none;
+    background: var(--surface); border: 1px solid var(--border-2);
+    border-radius: var(--radius-s); box-shadow: var(--shadow);
+    padding: 8px 10px; font-size: 11.5px; color: var(--ink-1);
+    max-width: 260px; display: none;
+  }
+  .viz-tooltip.show { display: block; }
+  .viz-tooltip .tt-title { font-weight: 700; margin-bottom: 3px; }
+  .viz-tooltip .tt-row { display: flex; justify-content: space-between; gap: 10px; color: var(--ink-2); }
+  .viz-tooltip .tt-row b { color: var(--ink-1); font-variant-numeric: tabular-nums; }
+
+  /* ---------- badges ---------- */
+  .badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 2px 8px; border-radius: 999px; font-size: 10.5px; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.03em;
+  }
+  .badge-sig    { background: color-mix(in srgb, var(--critical) 18%, transparent); color: var(--critical); }
+  .badge-sugg   { background: color-mix(in srgb, var(--warning) 20%, transparent); color: var(--warning); }
+  .badge-ns     { background: var(--surface-2); color: var(--ink-3); }
+  .badge-causal { background: color-mix(in srgb, var(--brand-green) 20%, transparent); color: var(--good); }
+
+  /* ---------- modal ---------- */
+  .modal-backdrop {
+    position: fixed; inset: 0; background: rgba(10,14,18,0.45);
+    backdrop-filter: blur(1px);
+    display: none; align-items: flex-start; justify-content: center;
+    padding: 4vh 16px; overflow-y: auto; z-index: 200;
+  }
+  .modal-backdrop.open { display: flex; }
+  .modal {
+    width: 100%; max-width: 940px;
+    background: var(--surface);
+    border-radius: var(--radius-l);
+    border: 1px solid var(--border-2);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+  }
+  .modal-head {
+    padding: 16px 20px;
+    display: flex; align-items: flex-start; justify-content: space-between; gap: 14px;
+  }
+  .modal-head-left { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+  .modal-title { font-size: 17px; font-weight: 700; margin: 0; word-break: break-word; font-variant-numeric: tabular-nums; }
+  .modal-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; font-size: 11.5px; color: var(--ink-2); }
+  .modal-close {
+    flex: none; width: 30px; height: 30px; border-radius: 50%;
+    border: 1px solid rgba(0,0,0,0.12); background: rgba(255,255,255,0.5);
+    color: var(--ink-1); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  }
+  .modal-close:hover { background: rgba(255,255,255,0.85); }
+  .modal-body { padding: 4px 20px 20px; }
+  .modal-section { margin-top: 14px; }
+  .modal-section-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em;
+    color: var(--ink-3); margin: 0 0 8px;
+  }
+  .chart-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  @media (max-width: 720px) { .chart-grid-2 { grid-template-columns: 1fr; } }
+  .chart-box {
+    border: 1px solid var(--border); border-radius: var(--radius-m);
+    padding: 10px 12px 8px; background: var(--surface-2);
+  }
+  .chart-box h3 { font-size: 12px; margin: 0 0 2px; font-weight: 700; }
+  .chart-box .stat-line { font-size: 11.5px; color: var(--ink-2); margin-top: 4px; }
+  .chart-box .stat-line b { color: var(--ink-1); font-variant-numeric: tabular-nums; }
+  .warn-note {
+    display: flex; gap: 6px; align-items: flex-start;
+    font-size: 11px; color: var(--serious); margin-top: 6px;
+    background: color-mix(in srgb, var(--serious) 10%, transparent);
+    padding: 6px 8px; border-radius: 6px;
+  }
+  .plain-sentence {
+    font-size: 12.5px; color: var(--ink-1); background: var(--surface-2);
+    border: 1px solid var(--border); border-radius: var(--radius-m);
+    padding: 10px 12px; margin-top: 4px;
+  }
+  .plain-sentence b { font-variant-numeric: tabular-nums; }
+
+  /* ---------- table ---------- */
+  table.datatable { border-collapse: collapse; width: 100%; font-size: 11.5px; }
+  table.datatable th, table.datatable td { padding: 5px 8px; border-bottom: 1px solid var(--border); text-align: left; }
+  table.datatable th { color: var(--ink-3); font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.04em; }
+  table.datatable td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  table.datatable tr.row-meta td { font-weight: 700; background: var(--surface); }
+
+  /* ---------- sites tab ---------- */
+  .site-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; }
+  .site-card { border: 1px solid var(--border); border-radius: var(--radius-m); padding: 14px; background: var(--surface-2); }
+  .site-card .site-head { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+  .site-card .swatch-dot { width: 13px; height: 13px; border-radius: 50%; flex: none; }
+  .site-card h3 { margin: 0; font-size: 13.5px; }
+  .site-card dl { margin: 0; font-size: 12px; color: var(--ink-2); }
+  .site-card dl div { display: flex; justify-content: space-between; padding: 3px 0; border-bottom: 1px dashed var(--border); }
+  .site-card dl div:last-child { border-bottom: none; }
+  .site-card dl b { color: var(--ink-1); font-variant-numeric: tabular-nums; }
+
+  /* ---------- pipeline tab ---------- */
+  .flow-row { display: flex; align-items: stretch; gap: 4px; overflow-x: auto; padding: 6px 2px 14px; }
+  .flow-box {
+    flex: 1 1 220px; min-width: 210px; border: 1px solid var(--border-2); border-radius: var(--radius-m);
+    padding: 12px 14px; background: var(--surface-2);
+  }
+  .flow-box .flow-step { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.05em; color: var(--accent); font-weight: 700; }
+  .flow-box h3 { margin: 4px 0 4px; font-size: 13px; }
+  .flow-box p { margin: 0; font-size: 11.5px; color: var(--ink-2); }
+  .flow-arrow { flex: 0 0 26px; display: flex; align-items: center; justify-content: center; color: var(--ink-3); font-size: 18px; }
+  .info-list { margin: 6px 0 0; padding-left: 18px; font-size: 12.5px; color: var(--ink-2); }
+  .info-list li { margin-bottom: 4px; }
+
+  svg text { font-family: Arial, "Helvetica Neue", Helvetica, sans-serif; }
+  .axis-line { stroke: var(--border-2); stroke-width: 1; }
+  .grid-line { stroke: var(--border); stroke-width: 1; }
+  .axis-label { fill: var(--ink-3); font-size: 10px; }
+  .sig-line { stroke: var(--critical); stroke-width: 1; stroke-dasharray: 4 3; opacity: 0.7; }
+  .sugg-line { stroke: var(--ink-3); stroke-width: 1; stroke-dasharray: 2 3; }
+  .sig-label { fill: var(--critical); font-size: 9.5px; font-weight: 700; }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .modal, .tab-btn, .chip, .icon-btn { transition: background-color .12s ease, border-color .12s ease, color .12s ease; }
+  }
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+
+  @media (max-width: 720px) {
+    .topbar { flex-direction: column; }
+    .search-wrap { width: 100%; }
+    .topbar-right { width: 100%; justify-content: space-between; }
+  }
+
+  footer.appfoot {
+    margin-top: 26px; padding-top: 14px; border-top: 1px solid var(--border);
+    font-size: 11px; color: var(--ink-3); display: flex; justify-content: space-between; flex-wrap: wrap; gap: 6px;
+  }
+  .data-mode-banner {
+    border: 1px solid var(--border-2); border-radius: var(--radius-m);
+    margin: -4px 0 14px; padding: 8px 12px; font-size: 12px;
+    font-weight: 700; letter-spacing: 0.02em;
+  }
+  .data-mode-banner.real { background: var(--brand-green-wash); color: var(--good); }
+  .data-mode-banner.demo { background: #d54e121a; color: var(--serious); }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <div class="topbar">
+    <div class="brand">
+      <h1>FedGX Explorer</h1>
+      <p id="brandDesc">Federated GWAS built for the Nordic Biobank &times; NVIDIA Hackathon. Local GWAS runs on each site's own server; only summary statistics leave the site for central meta-analysis with GWAMA.</p>
+    </div>
+    <div class="topbar-right">
+      <div class="search-wrap">
+        <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+        <input id="searchInput" class="search-input" type="text" placeholder="Search a SNP (rsid)&hellip;" autocomplete="off" />
+        <div id="searchResults" class="search-results"></div>
+      </div>
+      <button id="themeToggle" class="icon-btn" title="Toggle theme" aria-label="Toggle theme"></button>
+    </div>
+  </div>
+
+  <div id="dataModeBanner" class="data-mode-banner"></div>
+
+  <div id="tabstrip" class="tabstrip"></div>
+
+  <div id="mainContent"></div>
+
+  <footer class="appfoot">
+    <span id="footNote">Click any point on the Manhattan plot &mdash; or search an rsid &mdash; to trace that variant's evidence across all sites and the combined meta-analysis.</span>
+    <span id="dataStamp"></span>
+  </footer>
+</div>
+
+<div id="modalBackdrop" class="modal-backdrop">
+  <div class="modal" role="dialog" aria-modal="true" id="modalCard"></div>
+</div>
+
+<div id="tooltip" class="viz-tooltip"></div>
+
+<!-- Optional real-data payload: generated by build_fedx_dashboard.py from your
+     site GWAMA/cleaned files and GWAMA meta-analysis output. Sets
+     window.FEDX_DATA. If this file is absent (e.g. missing 404), the app
+     falls back to the built-in synthetic demo below - harmless either way. -->
+<script src="fedx_data.js"></script>
+<script>
+"use strict";
+
+/* =========================================================================
+   RNG (seeded, so the "study" looks the same every time you load the page)
+   ========================================================================= */
+function mulberry32(seed) {
+  let a = seed >>> 0;
+  return function () {
+    a |= 0; a = (a + 0x6D2B79F5) | 0;
+    let t = Math.imul(a ^ (a >>> 15), 1 | a);
+    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+const rng = mulberry32(20260918);
+function rUnif(a, b) { return a + (b - a) * rng(); }
+function rNorm(mu, sd) {
+  const u1 = Math.max(rng(), 1e-9), u2 = rng();
+  const z = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+  return mu + sd * z;
+}
+function clamp(v, lo, hi) { return Math.max(lo, Math.min(hi, v)); }
+
+/* =========================================================================
+   Stats helpers - normal CDF via Abramowitz-Stegun erf approximation, used
+   to turn simulated z-scores into two-sided p-values (no external stats lib).
+   ========================================================================= */
+function erf(x) {
+  const sign = x < 0 ? -1 : 1; x = Math.abs(x);
+  const a1=0.254829592,a2=-0.284496736,a3=1.421413741,a4=-1.453152027,a5=1.061405429,p=0.3275911;
+  const t = 1 / (1 + p * x);
+  const y = 1 - (((((a5*t+a4)*t)+a3)*t+a2)*t+a1) * t * Math.exp(-x*x);
+  return sign * y;
+}
+function normalCDF(x) { return 0.5 * (1 + erf(x / Math.SQRT2)); }
+function pFromZ(z) { return Math.max(2 * (1 - normalCDF(Math.abs(z))), 1e-300); }
+function negLog10P(p) { return -Math.log10(Math.max(p, 1e-300)); }
+// The erf approximation above underflows to exactly p=0 once |z| gets much
+// past ~8.5 (double-precision can't represent 1-Phi(z) that close to 1), which
+// would otherwise clamp every very-significant SNP to the same flat p=1e-300
+// and flatten their peaks. For |z|>=6, use the standard Mills-ratio tail
+// approximation directly in log10 space instead, which stays accurate (and
+// distinguishable) far into the tail: log10(p) = log10(2) - 0.5*log10(2*pi)
+// - log10(|z|) - z^2/(2*ln10).
+function log10PFromZ(z) {
+  const az = Math.max(Math.abs(z), 1e-12);
+  if (az < 6) return Math.log10(pFromZ(z));
+  return Math.log10(2) - 0.5 * Math.log10(2 * Math.PI) - Math.log10(az) - (az * az) / (2 * Math.LN10);
+}
+function negLog10FromZ(z) { return -log10PFromZ(z); }
+function pStringFromZ(z) {
+  const l = log10PFromZ(z);
+  if (l > -4) return Math.pow(10, l).toFixed(4);
+  const exp = Math.floor(l);
+  const mant = Math.pow(10, l - exp);
+  return mant.toFixed(2) + "e" + exp;
+}
+function fmtP(p) {
+  if (p == null) return "N/A";
+  if (p < 1e-4) return p.toExponential(2);
+  return p.toFixed(4);
+}
+function fmtBeta(b) { return b == null ? "N/A" : (b >= 0 ? "+" : "") + b.toFixed(3); }
+function fmtN(n) { return n == null ? "N/A" : Math.round(n).toLocaleString("en-US"); }
+function fmtEAF(x) { return x == null ? "N/A" : x.toFixed(3); }
+// ancestryProxy is only ever set in the synthetic demo dataset; real sites
+// loaded from FEDX_DATA just have a label, so these fall back cleanly.
+function siteLabel(s) { return s.ancestryProxy ? s.label + " - " + s.ancestryProxy : s.label; }
+function siteLabelParen(s) { return s.ancestryProxy ? s.label + " (" + s.ancestryProxy + ")" : s.label; }
+
+/* =========================================================================
+   Data loading - two modes.
+
+   Real mode: build_fedx_dashboard.py reads each site's `.cleaned.txt`
+   (produced by gwas_cohort_qc_with_gwama.R) plus the combined GWAMA
+   meta-analysis output, merges them on VARIANT_ID (= GWAMA's MARKERNAME,
+   "chr:pos:allele:allele"), and writes fedx_data.js as
+   `window.FEDX_DATA = {...}`. If that file is present, we use it as-is.
+
+   Synthetic mode (fallback): if fedx_data.js is missing - e.g. this file was
+   opened standalone, with no real pipeline output at hand - the app
+   generates a seeded, LDAK-style synthetic federated GWAS instead, purely
+   so the dashboard has something to show. See buildSyntheticDataset() below.
+   ========================================================================= */
+const GENOME_SIG_P = 5e-8;
+const SUGGESTIVE_P = 1e-5;
+const DEFAULT_SITE_COLORS = ["#0064A6", "#D54E12", "#86A10B", "#8AC2E6", "#F0B600", "#66757E"];
+
+function loadRealDataset(data) {
+  const sites = data.sites.map((s, i) => ({
+    key: s.key || "site" + (i + 1),
+    label: s.label || s.key || ("Site " + (i + 1)),
+    ancestryProxy: s.ancestryProxy || "",
+    host: s.host || "",
+    n: s.n || 0,
+    color: s.color || DEFAULT_SITE_COLORS[i % DEFAULT_SITE_COLORS.length],
+  }));
+  const meta = Object.assign({
+    key: "meta", label: "Combined meta-analysis", sub: "GWAMA, fixed-effect inverse-variance", color: "#E3007B",
+  }, data.meta || {});
+  const chrInfo = data.chrInfo;
+  const totalLenMb = data.totalLenMb || null;
+  const snps = data.snps.map((r, i) => {
+    const site = {};
+    // build_fedx_dashboard.py only ships z (the numerically robust quantity);
+    // p is derived here, the same way the synthetic generator derives it, so
+    // every downstream threshold check (p < GENOME_SIG_P etc.) has it.
+    sites.forEach(s => {
+      const d = r.site && r.site[s.key];
+      site[s.key] = d ? Object.assign({ p: d.p != null ? d.p : pFromZ(d.z) }, d) : null;
+    });
+    const metaP = r.meta.p != null ? r.meta.p : pFromZ(r.meta.z);
+    return {
+      idx: i, rsid: r.rsid || r.marker, marker: r.marker, chr: r.chr, posMb: r.posMb, cumFrac: r.cumFrac,
+      locus: null, isLocusCenter: false, site, meta: Object.assign({ p: metaP }, r.meta),
+    };
+  });
+  return {
+    sites, meta, chrInfo, totalLenMb, snps, isSynthetic: false,
+    sourceInfo: data.sourceInfo || null,
+    analysis: data.analysis || { method: "Unknown", traitType: "unknown", model: "unknown" },
+    sampling: data.sampling || { totalVariants: snps.length, displayedVariants: snps.length, sampled: false },
+  };
+}
+
+/* =========================================================================
+   Synthetic fallback - three simulated servers, each assigned an
+   ancestry-proxy allele-frequency spectrum (per the manuscript's "Methods":
+   all three hosted on NVIDIA Brev). These are *proxies* built
+   for the simulation, not real cohorts or real ancestry claims. Model: a
+   shared set of causal loci gets a base standardized effect; each site
+   draws its own allele frequency and a small per-site effect-size scale,
+   then the observed per-site beta is the true effect plus sampling noise
+   scaled by that site's standard error (~ 1/sqrt(2*eaf*(1-eaf)*N), the usual
+   GWAS asymptotic SE). The combined analysis is a fixed-effect,
+   inverse-variance-weighted meta-analysis of the site betas - exactly what
+   GWAMA computes from site-level summary stats.
+   ========================================================================= */
+function buildSyntheticDataset() {
+  const sites = [
+    { key: "site1", label: "Site 1", ancestryProxy: "EUR-proxy", host: "NVIDIA Brev - node A", n: 8000, eafCenter: 0.32, color: "#0064A6" },
+    { key: "site2", label: "Site 2", ancestryProxy: "EAS-proxy", host: "NVIDIA Brev - node B", n: 6000, eafCenter: 0.18, color: "#D54E12" },
+    { key: "site3", label: "Site 3", ancestryProxy: "AFR-proxy", host: "NVIDIA Brev - node C", n: 5000, eafCenter: 0.40, color: "#86A10B" },
+  ];
+  const meta = { key: "meta", label: "Combined meta-analysis", sub: "GWAMA, fixed-effect inverse-variance", color: "#E3007B" };
+
+  const chrLensMb = [249,243,198,191,181,171,159,145,138,134,135,133,114,107,102,90,83,80,59,64,47,51];
+  const totalLenMb = chrLensMb.reduce((a, b) => a + b, 0);
+  let cum = 0;
+  const chrInfo = chrLensMb.map((len, i) => {
+    const startFrac = cum / totalLenMb;
+    cum += len;
+    const endFrac = cum / totalLenMb;
+    return { chr: i + 1, lenMb: len, startFrac, endFrac };
+  });
+
+  const snpsPerMb = 2600 / totalLenMb;
+  const ldWindowMb = 3.0;
+  const ldDecayMb = 0.6;
+
+  function buildSnpGrid() {
+    const rows = [];
+    chrInfo.forEach(ci => {
+      const count = Math.max(6, Math.round(ci.lenMb * snpsPerMb));
+      const positions = [];
+      for (let i = 0; i < count; i++) positions.push(rUnif(0, ci.lenMb));
+      positions.sort((a, b) => a - b);
+      positions.forEach(posMb => {
+        rows.push({ chr: ci.chr, posMb, chrInfo: ci, idx: null, rsid: null, effectFactor: 0, locus: null, isLocusCenter: false });
+      });
+    });
+    return rows;
+  }
+
+  function pickCausalLoci(snpRows, numLoci, numHero) {
+    // choose distinct SNP rows as causal-locus centers
+    const idxPool = snpRows.map((_, i) => i);
+    for (let i = idxPool.length - 1; i > 0; i--) {
+      const j = Math.floor(rng() * (i + 1));
+      [idxPool[i], idxPool[j]] = [idxPool[j], idxPool[i]];
+    }
+    const chosen = idxPool.slice(0, numLoci);
+    return chosen.map((rowIdx, li) => {
+      const isHero = li < numHero;
+      const sign = rng() < 0.5 ? -1 : 1;
+      const baseBeta = isHero ? sign * rUnif(0.075, 0.13) : rNorm(0, 0.032);
+      // store the row object itself, not its index - `snpRows` gets
+      // concatenated with fine-mapped extras and re-sorted by position right
+      // after this runs, which would silently invalidate a plain index
+      return { name: "sim_locus_" + String(li + 1).padStart(2, "0"), row: snpRows[rowIdx], baseBeta, isHero };
+    });
+  }
+
+  function buildFineMapSnps(loci) {
+    // add extra, densely-spaced SNPs around each causal locus so peaks look
+    // like real fine-mapped regions rather than a single lonely dot
+    const extra = [];
+    loci.forEach(locus => {
+      const center = locus.row;
+      for (let i = 0; i < 15; i++) {
+        const dpos = rNorm(0, 0.5);
+        const posMb = clamp(center.posMb + dpos, 0, center.chrInfo.lenMb);
+        extra.push({ chr: center.chr, posMb, chrInfo: center.chrInfo, idx: null, rsid: null, effectFactor: 0, locus: null, isLocusCenter: false });
+      }
+    });
+    return extra;
+  }
+
+  function assignEffects(snpRows, loci) {
+    // group indices by chromosome, sorted by position, so LD-decay neighbor
+    // search only ever looks within the same chromosome
+    const byChr = {};
+    snpRows.forEach((r, i) => { (byChr[r.chr] = byChr[r.chr] || []).push(i); });
+    Object.values(byChr).forEach(list => list.sort((a, b) => snpRows[a].posMb - snpRows[b].posMb));
+
+    loci.forEach(locus => {
+      const centerRow = locus.row;
+      centerRow.isLocusCenter = true;
+      centerRow.locus = locus.name;
+      const list = byChr[centerRow.chr];
+      list.forEach(i => {
+        const r = snpRows[i];
+        const d = Math.abs(r.posMb - centerRow.posMb);
+        if (d > ldWindowMb) return;
+        const factor = Math.exp(-d / ldDecayMb);
+        if (factor < 0.04) return;
+        r.effectFactor += locus.baseBeta * factor;
+        if (!r.locus) r.locus = locus.name;
+      });
+    });
+  }
+
+  function computeSummaryStats(snpRows) {
+    snpRows.forEach((r, i) => {
+      r.idx = i;
+      r.rsid = "rs" + (1200000 + i * 13 + Math.floor(rng() * 11));
+      r.site = {};
+      let sumW = 0, sumWB = 0;
+      sites.forEach(s => {
+        const eaf = clamp(rNorm(s.eafCenter, 0.09), 0.02, 0.6);
+        const se = 1 / Math.sqrt(2 * eaf * (1 - eaf) * s.n);
+        const siteScale = r.effectFactor !== 0 ? rUnif(0.75, 1.25) : 1;
+        const trueBeta = r.effectFactor * siteScale;
+        const beta = trueBeta + rNorm(0, se);
+        const z = beta / se;
+        const p = pFromZ(z);
+        r.site[s.key] = { eaf, se, beta, n: s.n, z, p };
+        const w = 1 / (se * se);
+        sumW += w; sumWB += w * beta;
+      });
+      const betaMeta = sumWB / sumW;
+      const seMeta = Math.sqrt(1 / sumW);
+      const zMeta = betaMeta / seMeta;
+      const pMeta = pFromZ(zMeta);
+      r.meta = { beta: betaMeta, se: seMeta, z: zMeta, p: pMeta };
+      r.cumFrac = r.chrInfo.startFrac + r.posMb / totalLenMb;
+    });
+  }
+
+  const base = buildSnpGrid();
+  const loci = pickCausalLoci(base, 42, 6);
+  const extra = buildFineMapSnps(loci);
+  const snps = base.concat(extra).sort((a, b) => (a.chr - b.chr) || (a.posMb - b.posMb));
+  assignEffects(snps, loci);
+  computeSummaryStats(snps);
+
+  return {
+    sites, meta, chrInfo, totalLenMb, snps, isSynthetic: true, sourceInfo: null,
+    analysis: { method: "REGENIE", traitType: "simulated", model: "fixed" },
+    sampling: { totalVariants: snps.length, displayedVariants: snps.length, sampled: false },
+  };
+}
+
+const DATASET = (typeof window.FEDX_DATA !== "undefined" && window.FEDX_DATA)
+  ? loadRealDataset(window.FEDX_DATA)
+  : buildSyntheticDataset();
+const SITES = DATASET.sites;
+const siteByKey = Object.fromEntries(SITES.map(s => [s.key, s]));
+const META = DATASET.meta;
+const ANALYSIS = DATASET.analysis;
+const SAMPLING = DATASET.sampling;
+const CHR_INFO = DATASET.chrInfo;
+const SNPS = DATASET.snps;
+const TOTAL_N = SITES.reduce((s, x) => s + x.n, 0);
+
+
+function lambdaGC(zArray) {
+  const chi = zArray.map(z => z * z).sort((a, b) => a - b);
+  const median = chi.length % 2 ? chi[(chi.length - 1) / 2] : (chi[chi.length / 2 - 1] + chi[chi.length / 2]) / 2;
+  return median / 0.4549364;
+}
+
+/* =========================================================================
+   SVG helpers
+   ========================================================================= */
+const SVGNS = "http://www.w3.org/2000/svg";
+function svgEl(tag, attrs, children) {
+  const el = document.createElementNS(SVGNS, tag);
+  if (attrs) for (const k in attrs) el.setAttribute(k, attrs[k]);
+  if (children) children.forEach(c => c && el.appendChild(c));
+  return el;
+}
+function svgText(x, y, str, attrs) {
+  const el = svgEl("text", Object.assign({ x, y }, attrs));
+  el.textContent = str;
+  return el;
+}
+
+/* =========================================================================
+   App state
+   ========================================================================= */
+const state = {
+  tab: "manhattan",
+  siteOff: new Set(),
+  metaOff: false,
+  tracedSnp: null,
+};
+
+const tooltipEl = document.getElementById("tooltip");
+function showTooltip(x, y, html) {
+  tooltipEl.innerHTML = "";
+  tooltipEl.appendChild(html);
+  tooltipEl.style.left = Math.min(x + 14, window.innerWidth - 280) + "px";
+  tooltipEl.style.top = Math.min(y + 14, window.innerHeight - 160) + "px";
+  tooltipEl.classList.add("show");
+}
+function hideTooltip() { tooltipEl.classList.remove("show"); }
+function ttRow(label, value) {
+  const row = document.createElement("div");
+  row.className = "tt-row";
+  const l = document.createElement("span"); l.textContent = label;
+  const v = document.createElement("b"); v.textContent = value;
+  row.appendChild(l); row.appendChild(v);
+  return row;
+}
+
+/* =========================================================================
+   Tabs
+   ========================================================================= */
+const TABS = [
+  { key: "manhattan", label: "Federated Manhattan" },
+  { key: "qq", label: "QQ diagnostics" },
+  { key: "sites", label: DATASET.isSynthetic ? "Sites & ancestries" : "Sites" },
+  { key: "pipeline", label: "Pipeline" },
+];
+function renderTabs() {
+  const strip = document.getElementById("tabstrip");
+  strip.innerHTML = "";
+  TABS.forEach(t => {
+    const btn = document.createElement("button");
+    btn.className = "tab-btn" + (state.tab === t.key ? " active" : "");
+    btn.textContent = t.label;
+    btn.onclick = () => { state.tab = t.key; renderTabs(); renderMain(); };
+    strip.appendChild(btn);
+  });
+}
+
+function renderMain() {
+  const host = document.getElementById("mainContent");
+  host.innerHTML = "";
+  if (state.tab === "manhattan") host.appendChild(renderManhattanTab());
+  else if (state.tab === "qq") host.appendChild(renderQQTab());
+  else if (state.tab === "sites") host.appendChild(renderSitesTab());
+  else if (state.tab === "pipeline") host.appendChild(renderPipelineTab());
+}
+
+/* =========================================================================
+   Manhattan tab
+   ========================================================================= */
+function renderLayerChips(container, onChange) {
+  const bar = document.createElement("div");
+  bar.className = "filterbar";
+  const label = document.createElement("span"); label.className = "flabel"; label.textContent = "Layers";
+  bar.appendChild(label);
+  SITES.forEach(s => {
+    const chip = document.createElement("div");
+    chip.className = "chip" + (state.siteOff.has(s.key) ? " off" : "");
+    const sw = document.createElement("span"); sw.className = "swatch-dot"; sw.style.background = s.color;
+    chip.appendChild(sw);
+    const txt = document.createElement("span"); txt.textContent = siteLabelParen(s);
+    chip.appendChild(txt);
+    chip.onclick = () => { state.siteOff.has(s.key) ? state.siteOff.delete(s.key) : state.siteOff.add(s.key); onChange(); };
+    bar.appendChild(chip);
+  });
+  const metaChip = document.createElement("div");
+  metaChip.className = "chip" + (state.metaOff ? " off" : "");
+  const msw = document.createElement("span"); msw.className = "swatch-dot"; msw.style.background = META.color;
+  metaChip.appendChild(msw);
+  const mtxt = document.createElement("span"); mtxt.textContent = "Combined (meta-analysis)";
+  metaChip.appendChild(mtxt);
+  metaChip.onclick = () => { state.metaOff = !state.metaOff; onChange(); };
+  bar.appendChild(metaChip);
+
+  const reset = document.createElement("button");
+  reset.className = "chip-reset"; reset.textContent = "Reset";
+  reset.onclick = () => { state.siteOff.clear(); state.metaOff = false; onChange(); };
+  bar.appendChild(reset);
+  container.appendChild(bar);
+}
+
+function renderManhattanTab() {
+  const wrap = document.createElement("div");
+  wrap.className = "card";
+
+  const head = document.createElement("div"); head.className = "card-head";
+  const h2 = document.createElement("h2"); h2.textContent = "Federated Manhattan plot";
+  const sub = document.createElement("span"); sub.className = "sub";
+  sub.textContent = SNPS.length.toLocaleString("en-US") + " simulated SNPs across chr1-22 | " + SITES.length + " sites (N=" + fmtN(TOTAL_N) + " combined)";
+  head.appendChild(h2); head.appendChild(sub);
+  wrap.appendChild(head);
+
+  renderLayerChips(wrap, () => rebuild());
+
+  const chartHost = document.createElement("div");
+  wrap.appendChild(chartHost);
+
+  const legend = document.createElement("div"); legend.className = "legend-row";
+  legend.style.marginTop = "10px";
+  SITES.forEach(s => {
+    const item = document.createElement("div"); item.className = "legend-item";
+    const dot = document.createElement("span"); dot.className = "swatch-dot"; dot.style.cssText += `background:${s.color};opacity:0.45;`;
+    item.appendChild(dot);
+    const t = document.createElement("span"); t.textContent = siteLabel(s) + " (low alpha, per-site meta)";
+    item.appendChild(t);
+    legend.appendChild(item);
+  });
+  const metaItem = document.createElement("div"); metaItem.className = "legend-item";
+  const mdot = document.createElement("span"); mdot.className = "swatch-dot"; mdot.style.cssText += `background:${META.color};opacity:0.92;`;
+  metaItem.appendChild(mdot);
+  const mt = document.createElement("span"); mt.textContent = "Combined meta-analysis (high alpha, drawn on top)";
+  metaItem.appendChild(mt);
+  legend.appendChild(metaItem);
+  wrap.appendChild(legend);
+
+  const note = document.createElement("div"); note.className = "card-note";
+  note.textContent = "Hover a dot for its value. Click a dot - or search an rsid above - to trace that SNP across every " + (DATASET.isSynthetic ? "ancestry-proxy panel" : "site") + " and the combined analysis.";
+  wrap.appendChild(note);
+
+  function rebuild() {
+    chartHost.innerHTML = "";
+    chartHost.appendChild(buildManhattanSVG());
+  }
+  rebuild();
+  return wrap;
+}
+
+function buildManhattanSVG() {
+  const W = 1220, H = 460, ML = 54, MR = 20, MT = 18, MB = 46;
+  const plotW = W - ML - MR, plotH = H - MT - MB;
+  const xScale = f => ML + f * plotW;
+
+  let maxNegLogP = 8;
+  SNPS.forEach(r => {
+    if (!state.metaOff) maxNegLogP = Math.max(maxNegLogP, negLog10FromZ(r.meta.z));
+    SITES.forEach(s => { if (!state.siteOff.has(s.key) && r.site[s.key]) maxNegLogP = Math.max(maxNegLogP, negLog10FromZ(r.site[s.key].z)); });
+  });
+  const yMax = Math.ceil((maxNegLogP + 1) / 2) * 2;
+  const yScale = y => MT + plotH - (y / yMax) * plotH;
+
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", style: "display:block;font-family:inherit;" });
+
+  // chromosome background bands
+  CHR_INFO.forEach((ci, i) => {
+    if (i % 2 === 0) return;
+    const x0 = xScale(ci.startFrac), x1 = xScale(ci.endFrac);
+    svg.appendChild(svgEl("rect", { x: x0, y: MT, width: Math.max(0.5, x1 - x0), height: plotH, fill: "var(--surface-2)" }));
+  });
+  CHR_INFO.forEach(ci => {
+    const cx = xScale((ci.startFrac + ci.endFrac) / 2);
+    svg.appendChild(svgText(cx, H - MB + 16, String(ci.chr), { class: "axis-label", "text-anchor": "middle" }));
+  });
+
+  // y gridlines
+  const ticks = 6;
+  for (let i = 0; i <= ticks; i++) {
+    const yVal = (yMax / ticks) * i;
+    const yy = yScale(yVal);
+    svg.appendChild(svgEl("line", { x1: ML, x2: W - MR, y1: yy, y2: yy, class: "grid-line" }));
+    svg.appendChild(svgText(ML - 8, yy + 3, yVal.toFixed(0), { class: "axis-label", "text-anchor": "end" }));
+  }
+  svg.appendChild(svgText(14, MT + plotH / 2, "-log10(p)", { class: "axis-label", "text-anchor": "middle", transform: `rotate(-90 14 ${MT + plotH / 2})` }));
+
+  // significance lines
+  const sigY = yScale(negLog10P(GENOME_SIG_P));
+  if (sigY > MT && sigY < MT + plotH) {
+    svg.appendChild(svgEl("line", { x1: ML, x2: W - MR, y1: sigY, y2: sigY, class: "sig-line" }));
+    svg.appendChild(svgText(W - MR, sigY - 4, "genome-wide (5e-8)", { class: "sig-label", "text-anchor": "end" }));
+  }
+  const suggY = yScale(negLog10P(SUGGESTIVE_P));
+  if (suggY > MT && suggY < MT + plotH) {
+    svg.appendChild(svgEl("line", { x1: ML, x2: W - MR, y1: suggY, y2: suggY, class: "sugg-line" }));
+    svg.appendChild(svgText(W - MR, suggY - 4, "suggestive (1e-5)", { class: "axis-label", "text-anchor": "end" }));
+  }
+
+  const pointsLayer = svgEl("g", {});
+  SITES.forEach(s => {
+    if (state.siteOff.has(s.key)) return;
+    SNPS.forEach(r => {
+      if (!r.site[s.key]) return; // this site had no result for this variant (missing platform/imputation coverage)
+      const x = xScale(r.cumFrac);
+      const y = yScale(negLog10FromZ(r.site[s.key].z));
+      pointsLayer.appendChild(svgEl("circle", {
+        cx: x, cy: y, r: 2.6, fill: s.color, "fill-opacity": 0.32,
+        stroke: "transparent", "stroke-width": 9,
+        "data-snp": r.idx, "data-series": s.key,
+      }));
+    });
+  });
+  if (!state.metaOff) {
+    SNPS.forEach(r => {
+      const x = xScale(r.cumFrac);
+      const y = yScale(negLog10FromZ(r.meta.z));
+      pointsLayer.appendChild(svgEl("circle", {
+        cx: x, cy: y, r: 3.2, fill: META.color, "fill-opacity": 0.92,
+        stroke: "transparent", "stroke-width": 9,
+        "data-snp": r.idx, "data-series": "meta",
+      }));
+    });
+  }
+  svg.appendChild(pointsLayer);
+
+  // trace overlay - guide line + rings across every series for the clicked SNP
+  if (state.tracedSnp) {
+    const r = state.tracedSnp;
+    const x = xScale(r.cumFrac);
+    const guide = svgEl("line", { x1: x, x2: x, y1: MT, y2: MT + plotH, stroke: "var(--ink-1)", "stroke-width": 1, "stroke-dasharray": "2 3", "pointer-events": "none" });
+    svg.appendChild(guide);
+    SITES.forEach(s => {
+      if (!r.site[s.key]) return;
+      const y = yScale(negLog10FromZ(r.site[s.key].z));
+      svg.appendChild(svgEl("circle", { cx: x, cy: y, r: 6.5, fill: "none", stroke: s.color, "stroke-width": 2, "pointer-events": "none" }));
+    });
+    const ym = yScale(negLog10FromZ(r.meta.z));
+    svg.appendChild(svgEl("circle", { cx: x, cy: ym, r: 7.5, fill: "none", stroke: META.color, "stroke-width": 2.4, "pointer-events": "none" }));
+    const siteYs = SITES.filter(s => r.site[s.key]).map(s => yScale(negLog10FromZ(r.site[s.key].z)));
+    const labelY = Math.max(MT + 10, Math.min(ym, ...siteYs) - 10);
+    svg.appendChild(svgText(x, labelY, r.rsid, { class: "axis-label", "text-anchor": "middle", "font-weight": "700", fill: "var(--ink-1)", "pointer-events": "none" }));
+  }
+
+  svg.addEventListener("mousemove", e => {
+    const el = e.target.closest && e.target.closest("[data-snp]");
+    if (!el) { hideTooltip(); return; }
+    const idx = parseInt(el.getAttribute("data-snp"), 10);
+    const seriesKey = el.getAttribute("data-series");
+    const r = SNPS[idx];
+    const isMeta = seriesKey === "meta";
+    const box = document.createElement("div");
+    const title = document.createElement("div"); title.className = "tt-title"; title.textContent = r.rsid;
+    box.appendChild(title);
+    box.appendChild(ttRow("Position", "chr" + r.chr + ":" + r.posMb.toFixed(2) + "Mb"));
+    if (isMeta) {
+      box.appendChild(ttRow("Series", META.label));
+      box.appendChild(ttRow("Beta (meta)", fmtBeta(r.meta.beta)));
+      box.appendChild(ttRow("p-value", pStringFromZ(r.meta.z)));
+    } else {
+      const s = siteByKey[seriesKey];
+      box.appendChild(ttRow("Series", siteLabel(s)));
+      box.appendChild(ttRow("EAF", fmtEAF(r.site[seriesKey].eaf)));
+      box.appendChild(ttRow("Beta (SE)", fmtBeta(r.site[seriesKey].beta) + " (" + r.site[seriesKey].se.toFixed(3) + ")"));
+      box.appendChild(ttRow("p-value", pStringFromZ(r.site[seriesKey].z)));
+    }
+    if (r.locus) box.appendChild(ttRow("Locus", r.locus + (r.isLocusCenter ? " (lead)" : " (LD neighbour)")));
+    showTooltip(e.clientX, e.clientY, box);
+  });
+  svg.addEventListener("mouseleave", hideTooltip);
+  svg.addEventListener("click", e => {
+    const el = e.target.closest && e.target.closest("[data-snp]");
+    if (!el) return;
+    const idx = parseInt(el.getAttribute("data-snp"), 10);
+    traceSnp(SNPS[idx]);
+  });
+
+  return svg;
+}
+
+function traceSnp(snp) {
+  hideTooltip();
+  state.tracedSnp = snp;
+  openSnpModal(snp);
+  if (state.tab === "manhattan") renderMain();
+}
+
+/* =========================================================================
+   QQ diagnostics tab
+   ========================================================================= */
+function renderQQTab() {
+  const wrap = document.createElement("div");
+  wrap.className = "card";
+  const head = document.createElement("div"); head.className = "card-head";
+  const h2 = document.createElement("h2"); h2.textContent = "QQ diagnostics";
+  const sub = document.createElement("span"); sub.className = "sub";
+  sub.textContent = "Observed vs. expected -log10(p) per series, with genomic inflation (lambda)";
+  head.appendChild(h2); head.appendChild(sub);
+  wrap.appendChild(head);
+
+  const grid = document.createElement("div");
+  grid.style.cssText = "display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;";
+  const series = SITES.map(s => ({ label: siteLabel(s), color: s.color, z: SNPS.filter(r => r.site[s.key]).map(r => r.site[s.key].z) }))
+    .concat([{ label: META.label, color: META.color, z: SNPS.map(r => r.meta.z) }]);
+
+  series.forEach(s => {
+    const box = document.createElement("div"); box.className = "chart-box";
+    const h3 = document.createElement("h3"); h3.textContent = s.label;
+    box.appendChild(h3);
+    box.appendChild(buildQQSVG(s.z, s.color));
+    const stat = document.createElement("div"); stat.className = "stat-line";
+    stat.innerHTML = SAMPLING.sampled
+      ? "Genomic inflation: <b>use the full site QC output</b>"
+      : `Genomic inflation <b>&lambda; = ${lambdaGC(s.z).toFixed(3)}</b>`;
+    box.appendChild(stat);
+    grid.appendChild(box);
+  });
+  wrap.appendChild(grid);
+
+  const note = document.createElement("div"); note.className = "card-note";
+  note.textContent = SAMPLING.sampled
+    ? "This browser view contains a bounded display subset (strongest associations plus genome-wide coverage). QQ diagnostics and lambda must be taken from the full site QC outputs."
+    : DATASET.isSynthetic
+    ? "Lambda close to 1.0 indicates no systematic inflation from population stratification or a mis-specified null model - expected here since the simulation injects effects only at a handful of designated causal loci."
+    : "Lambda close to 1.0 indicates no systematic inflation from population stratification, cryptic relatedness, or a mis-specified null model. Values above ~1.05-1.1 are worth a closer look (PC coverage, relatedness filtering) before trusting the meta-analysis peaks.";
+  wrap.appendChild(note);
+  return wrap;
+}
+
+function buildQQSVG(zValues, color) {
+  const W = 280, H = 220, ML = 34, MR = 10, MT = 10, MB = 26;
+  const plotW = W - ML - MR, plotH = H - MT - MB;
+  // sort by descending |z| == ascending p, matching the usual QQ-plot rank order
+  const sorted = zValues.slice().sort((a, b) => Math.abs(b) - Math.abs(a));
+  const n = sorted.length;
+  const pts = sorted.map((z, i) => ({ x: negLog10P((i + 1) / (n + 1)), y: negLog10FromZ(z) }));
+  const maxV = Math.max(8, ...pts.map(p => Math.max(p.x, p.y)));
+  const xs = v => ML + (v / maxV) * plotW;
+  const ys = v => MT + plotH - (v / maxV) * plotH;
+
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", style: "display:block;" });
+  svg.appendChild(svgEl("line", { x1: ML, x2: ML, y1: MT, y2: MT + plotH, class: "axis-line" }));
+  svg.appendChild(svgEl("line", { x1: ML, x2: W - MR, y1: MT + plotH, y2: MT + plotH, class: "axis-line" }));
+  svg.appendChild(svgEl("line", { x1: xs(0), y1: ys(0), x2: xs(maxV), y2: ys(maxV), class: "grid-line", "stroke-dasharray": "2 3" }));
+  pts.forEach(p => {
+    svg.appendChild(svgEl("circle", { cx: xs(p.x), cy: ys(p.y), r: 1.8, fill: color, "fill-opacity": 0.5 }));
+  });
+  svg.appendChild(svgText(ML, H - 6, "expected", { class: "axis-label" }));
+  svg.appendChild(svgText(2, MT + 8, "observed", { class: "axis-label" }));
+  return svg;
+}
+
+/* =========================================================================
+   Sites & ancestries tab
+   ========================================================================= */
+function renderSitesTab() {
+  const wrap = document.createElement("div");
+  wrap.className = "card";
+  const head = document.createElement("div"); head.className = "card-head";
+  const h2 = document.createElement("h2"); h2.textContent = DATASET.isSynthetic ? "Sites & ancestry-proxy panels" : "Sites";
+  head.appendChild(h2);
+  wrap.appendChild(head);
+
+  const grid = document.createElement("div"); grid.className = "site-grid";
+  SITES.forEach(s => {
+    const card = document.createElement("div"); card.className = "site-card";
+    const sh = document.createElement("div"); sh.className = "site-head";
+    const sw = document.createElement("span"); sw.className = "swatch-dot"; sw.style.background = s.color;
+    sh.appendChild(sw);
+    const h3 = document.createElement("h3"); h3.textContent = siteLabel(s);
+    sh.appendChild(h3);
+    card.appendChild(sh);
+    const variantsTested = SNPS.filter(r => r.site[s.key]).length;
+    const rows = [["Host", s.host || "N/A"], ["Local GWAS tool", ANALYSIS.method || "N/A"], ["N", fmtN(s.n)], ["Variants tested", fmtN(variantsTested)]];
+    if (DATASET.isSynthetic) rows.push(["Mean simulated EAF", s.eafCenter.toFixed(2)]);
+    const dl = document.createElement("dl");
+    rows.forEach(([k, v]) => {
+      const row = document.createElement("div");
+      const kk = document.createElement("span"); kk.textContent = k;
+      const vv = document.createElement("b"); vv.textContent = v;
+      row.appendChild(kk); row.appendChild(vv);
+      dl.appendChild(row);
+    });
+    card.appendChild(dl);
+    grid.appendChild(card);
+  });
+  const metaCard = document.createElement("div"); metaCard.className = "site-card";
+  metaCard.style.borderColor = META.color;
+  const msh = document.createElement("div"); msh.className = "site-head";
+  const msw = document.createElement("span"); msw.className = "swatch-dot"; msw.style.background = META.color;
+  msh.appendChild(msw);
+  const mh3 = document.createElement("h3"); mh3.textContent = META.label;
+  msh.appendChild(mh3);
+  metaCard.appendChild(msh);
+  const mdl = document.createElement("dl");
+  [["Tool", "GWAMA"], ["Model", META.sub], ["N (combined)", fmtN(TOTAL_N)], ["Sites contributing", String(SITES.length)]].forEach(([k, v]) => {
+    const row = document.createElement("div");
+    const kk = document.createElement("span"); kk.textContent = k;
+    const vv = document.createElement("b"); vv.textContent = v;
+    row.appendChild(kk); row.appendChild(vv);
+    mdl.appendChild(row);
+  });
+  metaCard.appendChild(mdl);
+  grid.appendChild(metaCard);
+  wrap.appendChild(grid);
+
+  if (DATASET.isSynthetic) {
+    const warn = document.createElement("div"); warn.className = "warn-note";
+    warn.innerHTML = "&#9888;&nbsp; \"Ancestry-proxy\" labels (EUR/EAS/AFR-proxy) describe the allele-frequency spectrum each simulated server was assigned for this proof-of-concept - they are simulation parameters, not real cohorts, individuals, or claims about genetic ancestry.";
+    wrap.appendChild(warn);
+  } else if (DATASET.sourceInfo) {
+    const note = document.createElement("div"); note.className = "card-note";
+    note.textContent = DATASET.sourceInfo;
+    wrap.appendChild(note);
+  }
+  return wrap;
+}
+
+/* =========================================================================
+   Pipeline tab
+   ========================================================================= */
+function renderPipelineTab() {
+  const wrap = document.createElement("div");
+  wrap.className = "card";
+  const head = document.createElement("div"); head.className = "card-head";
+  const h2 = document.createElement("h2"); h2.textContent = "FedGX pipeline";
+  const sub = document.createElement("span"); sub.className = "sub"; sub.textContent = "NVIDIA FLARE 2.7 federation layer";
+  head.appendChild(h2); head.appendChild(sub);
+  wrap.appendChild(head);
+
+  const flow = document.createElement("div"); flow.className = "flow-row";
+  const steps = [
+    { step: "Step 1", title: "Local GWAS", body: "Each site runs " + (ANALYSIS.method || "the configured GWAS method") + " on its own server against local genotypes and phenotypes - raw individual-level data never leaves the site." },
+    { step: "Step 2", title: "Cross-site standardisation", body: "Site-level summary statistics are harmonised to a shared master SNP grid and naming convention before being passed on." },
+    { step: "Step 3", title: "Meta-analysis", body: "Harmonised summary statistics are combined centrally with " + META.sub + " into one federated result." },
+  ];
+  steps.forEach((s, i) => {
+    const box = document.createElement("div"); box.className = "flow-box";
+    const st = document.createElement("div"); st.className = "flow-step"; st.textContent = s.step;
+    box.appendChild(st);
+    const h3 = document.createElement("h3"); h3.textContent = s.title;
+    box.appendChild(h3);
+    const p = document.createElement("p"); p.textContent = s.body;
+    box.appendChild(p);
+    flow.appendChild(box);
+    if (i < steps.length - 1) {
+      const arrow = document.createElement("div"); arrow.className = "flow-arrow"; arrow.textContent = "â†’";
+      arrow.textContent = "\u2192";
+      flow.appendChild(arrow);
+    }
+  });
+  wrap.appendChild(flow);
+
+  const detail = document.createElement("div"); detail.className = "modal-section";
+  const dt = document.createElement("p"); dt.className = "modal-section-title"; dt.textContent = "Background";
+  detail.appendChild(dt);
+  const ul = document.createElement("ul"); ul.className = "info-list";
+  const bullets = [
+    "Built to extend the FedGen framework during the Nordic Biobank &times; NVIDIA Hackathon, adding software choice and site diversity to local GWAS analysis while keeping the federated workflow intact.",
+    "Simulated genome-wide data was generated with LDAK v6.1 and split across three servers, all hosted on NVIDIA Brev.",
+    DATASET.isSynthetic
+      ? "Each site was assigned an ancestry-proxy allele-frequency spectrum and a subset of a shared master SNP grid; a common set of causal variants was retained across sites, with effect sizes scaled per site."
+      : "Local GWAS (" + (ANALYSIS.method || "configured method") + ") was QC'd per site (info, MAC, palindromic/duplicate filtering) and standardised to a common CHR:POS:allele key before meta-analysis, per gwas_cohort_qc_with_gwama.R.",
+    "Goal: automatic multi-site GWAS - local analysis, standardisation, and meta-analysis - without requiring local programming at each site.",
+  ];
+  if (!DATASET.isSynthetic && DATASET.sourceInfo) bullets.push(DATASET.sourceInfo);
+  bullets.forEach(txt => { const li = document.createElement("li"); li.innerHTML = txt; ul.appendChild(li); });
+  detail.appendChild(ul);
+  wrap.appendChild(detail);
+
+  const note = document.createElement("div"); note.className = "card-note";
+  note.textContent = DATASET.isSynthetic
+    ? "This tab summarises the pipeline described in the accompanying manuscript; the Manhattan, QQ and site tabs visualise synthetic output shaped to match that pipeline's real result schema."
+    : "This tab summarises the pipeline described in the accompanying manuscript; the Manhattan, QQ and site tabs visualise real output from that pipeline, loaded via fedx_data.js.";
+  wrap.appendChild(note);
+  return wrap;
+}
+
+/* =========================================================================
+   Modal - forest plot + regional (locus-zoom) trace + stats table
+   ========================================================================= */
+function closeModal() {
+  document.getElementById("modalBackdrop").classList.remove("open");
+}
+
+function buildForestSVG(rows) {
+  const W = 620, H = 34 * rows.length + 30, ML = 190, MR = 110, MT = 12, MB = 22;
+  const plotW = W - ML - MR, plotH = H - MT - MB;
+  const allVals = rows.flatMap(r => [r.lo, r.hi, r.beta]).filter(v => v != null && isFinite(v));
+  let xMax = Math.max(0.05, ...allVals) * 1.15;
+  let xMin = Math.min(-0.05, ...allVals) * 1.15;
+  const xs = x => ML + ((x - xMin) / (xMax - xMin)) * plotW;
+
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", style: "display:block;" });
+  const zeroX = xs(0);
+  svg.appendChild(svgEl("line", { x1: zeroX, x2: zeroX, y1: MT, y2: MT + plotH, class: "grid-line", "stroke-dasharray": "2 3" }));
+  svg.appendChild(svgEl("line", { x1: ML, x2: ML, y1: MT, y2: MT + plotH, class: "axis-line" }));
+
+  rows.forEach((r, i) => {
+    const y = MT + i * 34 + 17;
+    svg.appendChild(svgText(0, y + 4, r.label, { class: "axis-label", "text-anchor": "start", fill: "var(--ink-1)" }));
+    if (r.isDiamond) {
+      const l = xs(r.lo), c = xs(r.beta), h = xs(r.hi);
+      const pts = `${l},${y} ${c},${y - 7} ${h},${y} ${c},${y + 7}`;
+      svg.appendChild(svgEl("polygon", { points: pts, fill: r.color, "fill-opacity": 0.85, stroke: r.color }));
+    } else {
+      svg.appendChild(svgEl("line", { x1: xs(r.lo), x2: xs(r.hi), y1: y, y2: y, stroke: r.color, "stroke-width": 2 }));
+      svg.appendChild(svgEl("line", { x1: xs(r.lo), x2: xs(r.lo), y1: y - 4, y2: y + 4, stroke: r.color, "stroke-width": 2 }));
+      svg.appendChild(svgEl("line", { x1: xs(r.hi), x2: xs(r.hi), y1: y - 4, y2: y + 4, stroke: r.color, "stroke-width": 2 }));
+      svg.appendChild(svgEl("circle", { cx: xs(r.beta), cy: y, r: 5.5, fill: r.color, stroke: "var(--surface-2)", "stroke-width": 1.5 }));
+    }
+    svg.appendChild(svgText(W - MR + 6, y + 4, `${fmtBeta(r.beta)} (${fmtBeta(r.lo)}, ${fmtBeta(r.hi)})`, { class: "axis-label", "text-anchor": "start", "font-variant-numeric": "tabular-nums" }));
+  });
+  [xMin, 0, xMax].forEach(v => {
+    svg.appendChild(svgText(xs(v), H - 5, v.toFixed(2), { class: "axis-label", "text-anchor": "middle" }));
+  });
+  return svg;
+}
+
+function buildLocusZoomSVG(snp) {
+  const W = 620, H = 210, ML = 40, MR = 14, MT = 10, MB = 26;
+  const plotW = W - ML - MR, plotH = H - MT - MB;
+  const windowMb = 1.5;
+  const neighbours = SNPS.filter(r => r.chr === snp.chr && Math.abs(r.posMb - snp.posMb) <= windowMb);
+  const xDomain = [snp.posMb - windowMb, snp.posMb + windowMb];
+  const xs = v => ML + ((v - xDomain[0]) / (xDomain[1] - xDomain[0])) * plotW;
+  let yMax = 8;
+  neighbours.forEach(r => {
+    yMax = Math.max(yMax, negLog10FromZ(r.meta.z));
+    SITES.forEach(s => { if (r.site[s.key]) yMax = Math.max(yMax, negLog10FromZ(r.site[s.key].z)); });
+  });
+  yMax = Math.ceil((yMax + 1) / 2) * 2;
+  const ys = v => MT + plotH - (v / yMax) * plotH;
+
+  const svg = svgEl("svg", { viewBox: `0 0 ${W} ${H}`, width: "100%", style: "display:block;" });
+  svg.appendChild(svgEl("line", { x1: ML, x2: ML, y1: MT, y2: MT + plotH, class: "axis-line" }));
+  svg.appendChild(svgEl("line", { x1: ML, x2: W - MR, y1: MT + plotH, y2: MT + plotH, class: "axis-line" }));
+  [0, yMax / 2, yMax].forEach(v => {
+    svg.appendChild(svgEl("line", { x1: ML, x2: W - MR, y1: ys(v), y2: ys(v), class: "grid-line" }));
+    svg.appendChild(svgText(ML - 6, ys(v) + 3, v.toFixed(0), { class: "axis-label", "text-anchor": "end" }));
+  });
+  const sigY = ys(negLog10P(GENOME_SIG_P));
+  if (sigY > MT) svg.appendChild(svgEl("line", { x1: ML, x2: W - MR, y1: sigY, y2: sigY, class: "sig-line" }));
+
+  SITES.forEach(s => {
+    neighbours.forEach(r => {
+      if (!r.site[s.key]) return;
+      const isSelf = r.idx === snp.idx;
+      svg.appendChild(svgEl("circle", { cx: xs(r.posMb), cy: ys(negLog10FromZ(r.site[s.key].z)), r: isSelf ? 4 : 2.6, fill: s.color, "fill-opacity": isSelf ? 0.85 : 0.32, stroke: isSelf ? "var(--ink-1)" : "none", "stroke-width": isSelf ? 1.5 : 0 }));
+    });
+  });
+  neighbours.forEach(r => {
+    const isSelf = r.idx === snp.idx;
+    svg.appendChild(svgEl("circle", { cx: xs(r.posMb), cy: ys(negLog10FromZ(r.meta.z)), r: isSelf ? 5 : 3.2, fill: META.color, "fill-opacity": isSelf ? 0.98 : 0.85, stroke: isSelf ? "var(--ink-1)" : "none", "stroke-width": isSelf ? 1.5 : 0 }));
+  });
+  svg.appendChild(svgText(ML, H - 6, "chr" + snp.chr + ", Â±" + windowMb + "Mb around " + snp.rsid, { class: "axis-label" }));
+  svg.lastChild.textContent = "chr" + snp.chr + ", \u00b1" + windowMb + "Mb around " + snp.rsid;
+  svg.appendChild(svgText(2, MT + 8, "-log10(p)", { class: "axis-label" }));
+  return svg;
+}
+
+function buildStatsTable(snp) {
+  const table = document.createElement("table"); table.className = "datatable";
+  const thead = document.createElement("thead");
+  thead.innerHTML = "<tr><th>Series</th><th>N</th><th>EAF</th><th>Beta (SE)</th><th>p-value</th></tr>";
+  table.appendChild(thead);
+  const tbody = document.createElement("tbody");
+  let coveredN = 0;
+  SITES.forEach(s => {
+    const d = snp.site[s.key];
+    const tr = document.createElement("tr");
+    if (!d) {
+      tr.innerHTML = `<td>${siteLabel(s)}</td><td class="num" colspan="4">no result for this variant at this site</td>`;
+    } else {
+      coveredN += d.n || s.n;
+      tr.innerHTML = `<td>${siteLabel(s)}</td><td class="num">${fmtN(d.n || s.n)}</td><td class="num">${fmtEAF(d.eaf)}</td><td class="num">${fmtBeta(d.beta)} (${d.se.toFixed(3)})</td><td class="num">${pStringFromZ(d.z)}</td>`;
+    }
+    tbody.appendChild(tr);
+  });
+  const trM = document.createElement("tr"); trM.className = "row-meta";
+  trM.innerHTML = `<td>${META.label}</td><td class="num">${fmtN(coveredN || TOTAL_N)}</td><td class="num">-</td><td class="num">${fmtBeta(snp.meta.beta)} (${snp.meta.se.toFixed(3)})</td><td class="num">${pStringFromZ(snp.meta.z)}</td>`;
+  tbody.appendChild(trM);
+  table.appendChild(tbody);
+  return table;
+}
+
+function traceSentence(snp) {
+  const presentSites = SITES.filter(s => snp.site[s.key]);
+  const metaSig = snp.meta.p < GENOME_SIG_P;
+  const metaSugg = snp.meta.p < SUGGESTIVE_P;
+  const sigSites = presentSites.filter(s => snp.site[s.key].p < GENOME_SIG_P);
+  const siteZ = presentSites.map(s => snp.site[s.key].z).sort((a, b) => Math.abs(b) - Math.abs(a));
+  const dirs = new Set(presentSites.map(s => Math.sign(snp.site[s.key].beta)).filter(d => d !== 0));
+  const heterogeneous = dirs.size > 1;
+  const metaPStr = pStringFromZ(snp.meta.z);
+  const panelWord = DATASET.isSynthetic ? "ancestry-proxy panel" : "site";
+
+  let text;
+  if (presentSites.length === 0) {
+    text = `No per-site breakdown available for this variant &mdash; only the combined meta-analysis result was found (meta p = <b>${metaPStr}</b>).`;
+  } else if (metaSig && sigSites.length === 0) {
+    text = `Combined across all ${presentSites.length} ${panelWord}${presentSites.length === 1 ? "" : "s"} (N=${fmtN(TOTAL_N)}), this variant reaches genome-wide significance (meta p = <b>${metaPStr}</b>), but no single site crosses that threshold on its own (site p range ${pStringFromZ(siteZ[0])}&ndash;${pStringFromZ(siteZ[siteZ.length - 1])}) &mdash; a direct illustration of the power gained by federating the sites.`;
+  } else if (metaSig) {
+    text = `This variant reaches genome-wide significance in the combined meta-analysis (meta p = <b>${metaPStr}</b>) and already in ${sigSites.length} of ${presentSites.length} individual site${sigSites.length === 1 ? "" : "s"}.`;
+  } else if (metaSugg) {
+    text = `Suggestive but not genome-wide significant evidence in the combined analysis (meta p = <b>${metaPStr}</b>); no individual site reaches genome-wide significance.`;
+  } else {
+    text = `No consistent association in any ${panelWord} or in the combined meta-analysis (meta p = <b>${metaPStr}</b>).`;
+  }
+  if (heterogeneous) {
+    text += ` <br/><b>Note:</b> the estimated effect direction differs between at least two sites &mdash; treat this locus as exploratory pending further replication.`;
+  }
+  return text;
+}
+
+function openSnpModal(snp) {
+  const card = document.getElementById("modalCard");
+  card.innerHTML = "";
+
+  const head = document.createElement("div"); head.className = "modal-head";
+  const left = document.createElement("div"); left.className = "modal-head-left";
+  const title = document.createElement("h2"); title.className = "modal-title"; title.textContent = snp.rsid;
+  left.appendChild(title);
+  const meta = document.createElement("div"); meta.className = "modal-meta";
+  const posSpan = document.createElement("span"); posSpan.textContent = "chr" + snp.chr + ":" + snp.posMb.toFixed(3) + "Mb";
+  meta.appendChild(posSpan);
+  const sigBadge = document.createElement("span");
+  sigBadge.className = "badge " + (snp.meta.p < GENOME_SIG_P ? "badge-sig" : snp.meta.p < SUGGESTIVE_P ? "badge-sugg" : "badge-ns");
+  sigBadge.textContent = snp.meta.p < GENOME_SIG_P ? "Genome-wide significant" : snp.meta.p < SUGGESTIVE_P ? "Suggestive" : "Not significant";
+  meta.appendChild(sigBadge);
+  if (snp.locus) {
+    const locusBadge = document.createElement("span"); locusBadge.className = "badge badge-causal";
+    locusBadge.textContent = (snp.isLocusCenter ? "Causal (simulated): " : "LD neighbour of ") + snp.locus;
+    meta.appendChild(locusBadge);
+  }
+  left.appendChild(meta);
+  head.appendChild(left);
+  const closeBtn = document.createElement("button"); closeBtn.className = "modal-close"; closeBtn.setAttribute("aria-label", "Close");
+  closeBtn.innerHTML = '<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><line x1="5" y1="5" x2="19" y2="19"/><line x1="19" y1="5" x2="5" y2="19"/></svg>';
+  closeBtn.onclick = closeModal;
+  head.appendChild(closeBtn);
+  card.appendChild(head);
+
+  const body = document.createElement("div"); body.className = "modal-body";
+
+  const sentenceWrap = document.createElement("div"); sentenceWrap.className = "plain-sentence";
+  sentenceWrap.innerHTML = traceSentence(snp);
+  body.appendChild(sentenceWrap);
+
+  const chartsGrid = document.createElement("div"); chartsGrid.className = "chart-grid-2"; chartsGrid.style.marginTop = "14px";
+
+  const forestBox = document.createElement("div"); forestBox.className = "chart-box";
+  const fh3 = document.createElement("h3"); fh3.textContent = DATASET.isSynthetic ? "Effect across ancestry-proxy panels" : "Effect across sites";
+  forestBox.appendChild(fh3);
+  const forestRows = SITES.filter(s => snp.site[s.key]).map(s => {
+    const d = snp.site[s.key];
+    return { label: siteLabelParen(s), beta: d.beta, lo: d.beta - 1.96 * d.se, hi: d.beta + 1.96 * d.se, color: s.color };
+  });
+  forestRows.push({ label: META.label, beta: snp.meta.beta, lo: snp.meta.beta - 1.96 * snp.meta.se, hi: snp.meta.beta + 1.96 * snp.meta.se, color: META.color, isDiamond: true });
+  forestBox.appendChild(buildForestSVG(forestRows));
+  chartsGrid.appendChild(forestBox);
+
+  const zoomBox = document.createElement("div"); zoomBox.className = "chart-box";
+  const zh3 = document.createElement("h3"); zh3.textContent = "Regional trace (this SNP highlighted per panel)";
+  zoomBox.appendChild(zh3);
+  zoomBox.appendChild(buildLocusZoomSVG(snp));
+  chartsGrid.appendChild(zoomBox);
+
+  body.appendChild(chartsGrid);
+
+  const tableSection = document.createElement("div"); tableSection.className = "modal-section";
+  const tt = document.createElement("p"); tt.className = "modal-section-title"; tt.textContent = "Per-panel summary statistics";
+  tableSection.appendChild(tt);
+  tableSection.appendChild(buildStatsTable(snp));
+  body.appendChild(tableSection);
+
+  card.appendChild(body);
+  document.getElementById("modalBackdrop").classList.add("open");
+}
+
+document.getElementById("modalBackdrop").addEventListener("click", e => {
+  if (e.target.id === "modalBackdrop") closeModal();
+});
+
+/* =========================================================================
+   Search
+   ========================================================================= */
+const searchInput = document.getElementById("searchInput");
+const searchResults = document.getElementById("searchResults");
+
+function runSearch(q) {
+  const query = q.trim().toLowerCase();
+  searchResults.innerHTML = "";
+  if (!query) { searchResults.classList.remove("open"); return; }
+  const matches = SNPS.filter(r => r.rsid.toLowerCase().includes(query)).slice(0, 12);
+  if (!matches.length) {
+    const row = document.createElement("div"); row.className = "search-result-row"; row.style.color = "var(--ink-3)";
+    row.textContent = "No matching rsid";
+    searchResults.appendChild(row);
+    searchResults.classList.add("open");
+    return;
+  }
+  matches.forEach(r => {
+    const row = document.createElement("div"); row.className = "search-result-row";
+    const sw = document.createElement("span"); sw.className = "search-result-swatch";
+    sw.style.background = r.meta.p < GENOME_SIG_P ? META.color : "var(--ink-3)";
+    row.appendChild(sw);
+    const name = document.createElement("span"); name.className = "search-result-name"; name.textContent = r.rsid;
+    row.appendChild(name);
+    const dom = document.createElement("span"); dom.className = "search-result-domain"; dom.textContent = "chr" + r.chr + ":" + r.posMb.toFixed(1) + "Mb";
+    row.appendChild(dom);
+    row.onclick = () => {
+      state.tab = "manhattan";
+      renderTabs(); renderMain();
+      traceSnp(r);
+      searchResults.classList.remove("open");
+      searchInput.value = r.rsid;
+    };
+    searchResults.appendChild(row);
+  });
+  searchResults.classList.add("open");
+}
+searchInput.addEventListener("input", e => runSearch(e.target.value));
+searchInput.addEventListener("focus", e => { if (e.target.value) runSearch(e.target.value); });
+document.addEventListener("click", e => {
+  if (!e.target.closest(".search-wrap")) searchResults.classList.remove("open");
+});
+
+/* =========================================================================
+   Theme toggle
+   ========================================================================= */
+const themeBtn = document.getElementById("themeToggle");
+function sunIcon() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="4.5"/><path d="M12 2.5v2.5M12 19v2.5M4.2 4.2l1.8 1.8M18 18l1.8 1.8M2.5 12H5M19 12h2.5M4.2 19.8L6 18M18 6l1.8-1.8"/></svg>'; }
+function moonIcon() { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5Z"/></svg>'; }
+function applyTheme(mode) {
+  document.documentElement.setAttribute("data-theme", mode);
+  themeBtn.innerHTML = mode === "dark" ? sunIcon() : moonIcon();
+}
+let currentTheme = window.matchMedia && window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+applyTheme(currentTheme);
+themeBtn.onclick = () => { currentTheme = currentTheme === "dark" ? "light" : "dark"; applyTheme(currentTheme); };
+
+/* =========================================================================
+   Init
+   ========================================================================= */
+if (DATASET.isSynthetic) {
+  const banner = document.getElementById("dataModeBanner");
+  banner.className += " demo";
+  banner.textContent = "DEMONSTRATION DATA — NOT REAL ASSOCIATION RESULTS";
+  document.getElementById("brandDesc").textContent += " All data below is synthetic (LDAK-simulated) â€” a proof of concept for the federated pipeline, not a real association study.";
+  document.getElementById("brandDesc").textContent = "Federated GWAS demonstration. All data below is synthetic (LDAK-simulated) — not a real association study.";
+  document.getElementById("footNote").textContent = "Synthetic proof-of-concept data (LDAK v6.1 simulated). " + document.getElementById("footNote").textContent;
+  document.getElementById("dataStamp").textContent = "Synthetic demo dataset, seeded - " + SNPS.length.toLocaleString("en-US") + " SNPs x (" + SITES.length + " sites + combined)";
+} else {
+  const banner = document.getElementById("dataModeBanner");
+  banner.className += " real";
+  banner.textContent = "REAL PIPELINE OUTPUT — " + (ANALYSIS.model || "unknown") + "-effects view" + (SAMPLING.sampled ? " — display subset" : "");
+  document.getElementById("brandDesc").textContent += " Showing real output from your pipeline (via fedx_data.js): " + SITES.length + " site" + (SITES.length === 1 ? "" : "s") + ", N=" + fmtN(TOTAL_N) + " combined.";
+  document.getElementById("dataStamp").textContent = "Real pipeline output - " + SNPS.length.toLocaleString("en-US") + (SAMPLING.sampled ? " of " + SAMPLING.totalVariants.toLocaleString("en-US") : "") + " variants x (" + SITES.length + " sites + combined " + (ANALYSIS.model || "") + " meta-analysis)";
+}
+renderTabs();
+renderMain();
+</script>
+</body>
+</html>

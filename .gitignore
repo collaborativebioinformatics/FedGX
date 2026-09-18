@@ -1,3 +1,6 @@
 .DS_Store
 .Rproj.user/
 runs/
+.test-output/
+__pycache__/
+fedx_data.js

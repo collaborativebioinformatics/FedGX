@@ -69,7 +69,7 @@ import sys
 import traceback
 
 import nvflare.client as flare
-from nvflare.app_common.abstract.fl_model import FLModel, ParamsType
+from nvflare.app_common.abstract.fl_model import FLModel
 
 DEFAULT_DATA_ROOT = "/home/ubuntu/data"
 DEFAULT_TOOLS_ROOT = "/home/ubuntu/tools"
@@ -351,17 +351,20 @@ def main():
             break
 
         meta = input_model.meta or {}
-        # The dataset id may be dictated by the server; otherwise the site's
-        # own name is used, which is the common case for one dataset per site.
-        dataset_id = str(meta.get("dataset_id", site_name))
+        # A server may request an explicit dataset. Otherwise use the one and
+        # only entry in this site's local registry; FLARE site names (for
+        # example site-1) need not equal cohort identifiers (for example
+        # site1).
+        requested_dataset_id = meta.get("dataset_id")
+        dataset_id = str(requested_dataset_id or site_name)
         method = meta.get("method", args.method)
         trait_type = meta.get("trait_type", args.trait_type)
 
-        print(f"\n[client] === {site_name} | dataset={dataset_id} | "
-              f"round={input_model.current_round} ===", flush=True)
-
         try:
             registry, registry_path = load_dataset_registry(args)
+            dataset_id = str(requested_dataset_id or next(iter(registry)))
+            print(f"\n[client] === {site_name} | dataset={dataset_id} | "
+                  f"round={input_model.current_round} ===", flush=True)
             dataset = resolve_dataset(registry, registry_path,
                                       dataset_id, args.data_root)
 
@@ -376,9 +379,13 @@ def main():
             results, qc_summary, n_variants = read_outputs(dataset, gwama_file)
 
             output_model = FLModel(
-                params={"SUCCESS": True},
-                params_type=ParamsType.FULL,
+                # FedAvgRecipe requires a valid model state to make the
+                # round-trip even though FedGX does not train it. Preserve the
+                # dummy state and carry workflow status in metadata.
+                params=input_model.params,
+                params_type=input_model.params_type,
                 meta={
+                    "success": True,
                     "site_name": site_name,
                     "dataset_id": dataset_id,
                     "method": method,
@@ -393,9 +400,10 @@ def main():
         except Exception as e:                     # noqa: BLE001
             traceback.print_exc()
             output_model = FLModel(
-                params={"SUCCESS": False},
-                params_type=ParamsType.FULL,
+                params=input_model.params,
+                params_type=input_model.params_type,
                 meta={
+                    "success": False,
                     "site_name": site_name,
                     "dataset_id": dataset_id,
                     "error_message": f"{type(e).__name__}: {e}",
