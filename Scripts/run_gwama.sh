@@ -79,10 +79,26 @@ if [[ "$MODEL" != "fixed" && "$MODEL" != "random" && "$MODEL" != "both" ]]; then
     exit 1
 fi
 
-if ! command -v GWAMA >/dev/null 2>&1; then
-    echo "ERROR: GWAMA executable not found in PATH." >&2
+# Resolve GWAMA explicitly when the federated server keeps tools outside PATH.
+# Resolution order: an exact FEDGX_GWAMA_BIN path, FEDGX_TOOLS_ROOT/GWAMA,
+# then PATH.  serverSide_job.py sets FEDGX_TOOLS_ROOT for production jobs.
+GWAMA_BIN="${FEDGX_GWAMA_BIN:-}"
+if [[ -n "$GWAMA_BIN" ]]; then
+    if [[ ! -x "$GWAMA_BIN" ]]; then
+        echo "ERROR: FEDGX_GWAMA_BIN is not executable: $GWAMA_BIN" >&2
+        exit 1
+    fi
+elif [[ -n "${FEDGX_TOOLS_ROOT:-}" && -x "${FEDGX_TOOLS_ROOT}/GWAMA" ]]; then
+    GWAMA_BIN="${FEDGX_TOOLS_ROOT}/GWAMA"
+elif command -v GWAMA >/dev/null 2>&1; then
+    GWAMA_BIN="$(command -v GWAMA)"
+else
+    echo "ERROR: GWAMA was not found. Set FEDGX_GWAMA_BIN, place GWAMA at" >&2
+    echo "       FEDGX_TOOLS_ROOT/GWAMA, or add it to PATH." >&2
     exit 1
 fi
+
+echo "Using GWAMA: $GWAMA_BIN"
 
 # ---------------------------------------------------------------------------
 # Validate the cohort files before handing anything to GWAMA
@@ -187,7 +203,7 @@ run_model() {
     local model="$1"
     local output_root="$2"
     local command=(
-        GWAMA
+        "$GWAMA_BIN"
         --filelist "$FILELIST"
         --output "$output_root"
     )
