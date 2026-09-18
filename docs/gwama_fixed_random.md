@@ -20,11 +20,12 @@ separate output directory for each method.
 ## Requirements
 
 - Linux or WSL with Bash.
-- GWAMA available as `GWAMA` on `PATH`.
+- GWAMA available as `GWAMA` on `PATH`, at
+  `$FEDGX_TOOLS_ROOT/GWAMA`, or through the exact `$FEDGX_GWAMA_BIN` path.
 - R with the `optparse` and `data.table` packages for site-level QC and
   conversion. R is not required if GWAMA-formatted files already exist.
 - Python 3.10 or newer for the comparison and plotting scripts.
-- Matplotlib for Manhattan plots.
+- Matplotlib for Manhattan plots and pandas for the optional dashboard builder.
 
 Check the environment:
 
@@ -39,7 +40,7 @@ If Matplotlib is missing, activate the project virtual environment and install
 it there:
 
 ```bash
-python3 -m pip install matplotlib
+python3 -m pip install matplotlib pandas
 ```
 
 ## Input contract
@@ -65,7 +66,7 @@ Quantitative-trait files require:
 MARKERNAME EA NEA BETA SE
 ```
 
-`N` and `EAF` are recommended when available. For Manhattan plots,
+`N` and `EAF` are required by the current runner. For Manhattan plots,
 `MARKERNAME` must begin with chromosome and position:
 
 ```text
@@ -78,7 +79,7 @@ cannot be positioned on a Manhattan plot without a separate map.
 
 The runner does not require a particular input directory. Every site file is
 passed as an explicit command-line path. `Scripts/gwas_cohort_qc_with_gwama.R`
-writes `<output-prefix>.GWAMA.txt.gz` into `--output-dir`; when `--output-dir`
+writes `<output-prefix>.GWAMA.txt` into `--output-dir`; when `--output-dir`
 is omitted, it writes to the current directory.
 
 A recommended central layout is:
@@ -86,9 +87,9 @@ A recommended central layout is:
 ```text
 runs/<phenotype>/<method>/
   inputs/
-    site1.GWAMA.txt.gz
-    site2.GWAMA.txt.gz
-    site3.GWAMA.txt.gz
+    site1.GWAMA.txt
+    site2.GWAMA.txt
+    site3.GWAMA.txt
   meta.fixed.out
   meta.random.out
   meta.comparison.tsv
@@ -101,7 +102,7 @@ site-produced summary file to that location on the central server.
 ## Create a GWAMA file at each site
 
 Run `Scripts/gwas_cohort_qc_with_gwama.R` at each participating site before
-central meta-analysis. It performs cohort-level QC and writes a compressed
+central meta-analysis. It performs cohort-level QC and writes an uncompressed
 GWAMA input file without transferring individual-level genotype or phenotype
 data.
 
@@ -160,7 +161,7 @@ Rscript Scripts/gwas_cohort_qc_with_gwama.R \
 The central input produced by this example is:
 
 ```text
-site_outputs/phenotype/regenie/site1.GWAMA.txt.gz
+site_outputs/phenotype/regenie/site1.GWAMA.txt
 ```
 
 Repeat with `site2`, `site3`, and so on. Transfer only the approved summary
@@ -177,7 +178,7 @@ or log OR for a binary trait), SE, EAF, and per-variant N. If a required value
 is absent, add it during an upstream standardization step rather than assigning
 an unrelated column.
 
-Besides the `.GWAMA.txt.gz` file, the site script writes cleaned statistics,
+Besides the `.GWAMA.txt` file, the site script writes cleaned statistics,
 QC summaries and logs, P-Z and SE-N summaries, and cohort-level P-Z and QQ
 plots. Review the QC log before releasing the GWAMA file for central analysis.
 
@@ -190,9 +191,9 @@ mkdir -p runs/phenotype/regenie/inputs
 
 bash Scripts/run_gwama.sh or --model both \
   runs/phenotype/regenie/meta \
-  runs/phenotype/regenie/inputs/site1.GWAMA.txt.gz \
-  runs/phenotype/regenie/inputs/site2.GWAMA.txt.gz \
-  runs/phenotype/regenie/inputs/site3.GWAMA.txt.gz
+  runs/phenotype/regenie/inputs/site1.GWAMA.txt \
+  runs/phenotype/regenie/inputs/site2.GWAMA.txt \
+  runs/phenotype/regenie/inputs/site3.GWAMA.txt
 ```
 
 For a quantitative trait, replace `or` with `qt`:
@@ -200,9 +201,9 @@ For a quantitative trait, replace `or` with `qt`:
 ```bash
 bash Scripts/run_gwama.sh qt --model both \
   runs/phenotype/regenie/meta \
-  runs/phenotype/regenie/inputs/site1.GWAMA.txt.gz \
-  runs/phenotype/regenie/inputs/site2.GWAMA.txt.gz \
-  runs/phenotype/regenie/inputs/site3.GWAMA.txt.gz
+  runs/phenotype/regenie/inputs/site1.GWAMA.txt \
+  runs/phenotype/regenie/inputs/site2.GWAMA.txt \
+  runs/phenotype/regenie/inputs/site3.GWAMA.txt
 ```
 
 To run only one model, use `--model fixed` or `--model random`. Omitting
@@ -210,8 +211,8 @@ To run only one model, use `--model fixed` or `--model random`. Omitting
 
 ```bash
 bash Scripts/run_gwama.sh or runs/phenotype/regenie/meta \
-  runs/phenotype/regenie/inputs/site1.GWAMA.txt.gz \
-  runs/phenotype/regenie/inputs/site2.GWAMA.txt.gz
+  runs/phenotype/regenie/inputs/site1.GWAMA.txt \
+  runs/phenotype/regenie/inputs/site2.GWAMA.txt
 ```
 
 ## Outputs
@@ -236,6 +237,32 @@ the number of studies, and marker-matching status.
 When I2 is zero, the random-effects result may be identical to the fixed-effect
 result. With substantial heterogeneity, RFX commonly has a larger standard
 error and a less significant P-value.
+
+## Run through the federated server controller
+
+`Scripts/serverSide_job.py` is the integrated NVFLARE entry point. It packages
+the site driver and QC converter for clients and packages the importable
+aggregator, GWAMA runner, comparison helper, and selected post-processing
+helpers for the server. Run it from any directory; packaged source paths are
+resolved relative to the script itself.
+
+```bash
+python3 Scripts/serverSide_job.py \
+  --env prod \
+  --n_clients 3 \
+  --method regenie \
+  --trait_type binary \
+  --model both \
+  --tools_root /home/ubuntu/tools \
+  --startup_kit /path/to/server/startup-kit \
+  --username your-nvflare-user
+```
+
+The default `--model both --plots` combination runs fixed and random GWAMA,
+checks that their expected files exist, creates the comparison table, and
+creates both Manhattan PNGs. Use `--dashboard` to add separate interactive
+fixed- and random-effects dashboard directories. Use `--no-plots` only when
+deliberately running a single model.
 
 ## Create the Manhattan plots
 
@@ -270,6 +297,35 @@ python3 Scripts/plot_gwama_manhattan.py \
   --dpi 300
 ```
 
+## Build the optional interactive dashboard
+
+The dashboard is an additional reporting layer, not a replacement for the two
+static Manhattan PNGs. It accepts the same central `site*.GWAMA.txt` files and
+one fixed- or random-effects GWAMA output. Binary OR/confidence-interval values
+are converted back to log effects for the forest plot.
+
+```bash
+python3 Scripts/build_fedx_dashboard.py \
+  --site runs/phenotype/regenie/inputs/site1.GWAMA.txt \
+  --site runs/phenotype/regenie/inputs/site2.GWAMA.txt \
+  --site runs/phenotype/regenie/inputs/site3.GWAMA.txt \
+  --meta runs/phenotype/regenie/meta.fixed.out \
+  --model fixed \
+  --trait-type binary \
+  --method regenie \
+  --html-template Scripts/fedx_dashboard.html \
+  --out-dir runs/phenotype/regenie/dashboard/fixed
+```
+
+Open `runs/phenotype/regenie/dashboard/fixed/index.html`. The generated
+`fedx_data.js` contains site-level summary statistics, so treat the dashboard
+directory as analysis output and do not publish it without the same approval
+used for the underlying summary statistics. To keep a full-GWAS browser view
+responsive, the builder embeds at most 50,000 variants by default, retaining
+the strongest associations and genome-wide coverage. Use `--max-variants 0`
+only when you intentionally want every variant; full-data QQ plots from the R
+QC step remain the authoritative diagnostics when the dashboard is sampled.
+
 ## Validate an installation
 
 Run the automated comparison and plotting tests:
@@ -285,12 +341,16 @@ binary. Before analysing real data, run a small multi-site example through
 
 ## Troubleshooting
 
-### `GWAMA executable not found in PATH`
+### `GWAMA was not found`
 
-Add the directory containing the executable, not the executable itself:
+Choose one supported resolution method:
 
 ```bash
 export PATH="/path/to/GWAMA-directory:$PATH"
+# or
+export FEDGX_TOOLS_ROOT="/path/to/tools"
+# or
+export FEDGX_GWAMA_BIN="/exact/path/to/GWAMA"
 ```
 
 ### Python reports version 2.7

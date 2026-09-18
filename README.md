@@ -61,7 +61,7 @@ Connect to each site's instance (Brev, HUNT Cloud, or your own infrastructure �
 python3 -m venv venv_nvflare
 source venv_nvflare/bin/activate
 
-pip install nvflare[PT] torch torchvision tensorboard
+pip install nvflare[PT] torch torchvision tensorboard pandas matplotlib
 ```
 
 Verify the install:
@@ -104,7 +104,7 @@ Check the logs to confirm the client connected to the NVFLARE server/dashboard.
 
 ```bash
 git clone https://github.com/collaborativebioinformatics/FedGX
-chmod +x FedGX/scripts/*.sh
+chmod +x FedGX/Scripts/*.sh
 ```
 
 ### 5. Get site data
@@ -159,11 +159,34 @@ The federated job handles:
 - Collecting summary statistics from all sites
 - Performing meta-analysis with GWAMA on the server
 
+The server entry point coordinates the complete workflow. A paired run is the
+default: fixed effects are the primary result and random effects are produced
+as a sensitivity analysis. Add `--dashboard` to build optional interactive
+fixed- and random-effects views after the standard result files and PNGs.
+
+```bash
+python3 Scripts/serverSide_job.py \
+  --env prod \
+  --n_clients 3 \
+  --method regenie \
+  --trait_type binary \
+  --model both \
+  --tools_root /home/ubuntu/tools \
+  --startup_kit /path/to/server/startup-kit \
+  --username your-nvflare-user \
+  --dashboard
+```
+
+Without `--dashboard`, the central job still writes the GWAMA fixed/random
+results, their comparison table, and two matched Manhattan PNGs. The server
+must have executable `/home/ubuntu/tools/GWAMA`; alternatively set
+`FEDGX_GWAMA_BIN` to its exact path.
+
 ### 8. Run the central GWAMA meta-analysis
 
-The central runner supports fixed-effect (`fixed`), random-effects (`random`), or paired (`both`) GWAMA analyses for binary and quantitative traits. Paired runs also produce a marker-level FFX/RFX comparison, and a separate script creates matched fixed- and random-effects Manhattan plots.
+The central runner supports fixed-effect (`fixed`), random-effects (`random`), or paired (`both`) GWAMA analyses for binary and quantitative traits. Paired federated runs produce a marker-level FFX/RFX comparison and matched fixed- and random-effects Manhattan plots automatically. The plotting script remains available for standalone reruns.
 
-Before the central run, each site uses `Scripts/gwas_cohort_qc_with_gwama.R` to QC its REGENIE, SAIGE, or PLINK summary results and produce `<site>.GWAMA.txt.gz`. This requires an explicit mapping from the source columns to chromosome, position, alleles, frequency, effect, standard error, sample size, and P-value — see [`docs/gwama_fixed_random.md`](docs/gwama_fixed_random.md) for a complete REGENIE example and the requirements for other formats.
+Before the central run, each site uses `Scripts/gwas_cohort_qc_with_gwama.R` to QC its REGENIE summary results and produce an uncompressed `<site>.GWAMA.txt`. This requires an explicit mapping from the source columns to chromosome, position, alleles, frequency, effect, standard error, sample size, and P-value — see [`docs/gwama_fixed_random.md`](docs/gwama_fixed_random.md) for the complete format requirements. SAIGE and PLINK should only be advertised after their site-driver branches are implemented and tested.
 
 Quick start for a binary trait:
 
@@ -172,18 +195,29 @@ mkdir -p runs/phenotype/regenie/inputs
 
 bash Scripts/run_gwama.sh or --model both \
   runs/phenotype/regenie/meta \
-  runs/phenotype/regenie/inputs/site1.GWAMA.txt.gz \
-  runs/phenotype/regenie/inputs/site2.GWAMA.txt.gz \
-  runs/phenotype/regenie/inputs/site3.GWAMA.txt.gz
+  runs/phenotype/regenie/inputs/site1.GWAMA.txt \
+  runs/phenotype/regenie/inputs/site2.GWAMA.txt \
+  runs/phenotype/regenie/inputs/site3.GWAMA.txt
 
 python3 Scripts/plot_gwama_manhattan.py \
   --fixed runs/phenotype/regenie/meta.fixed.out \
   --random runs/phenotype/regenie/meta.random.out \
   --output-prefix runs/phenotype/regenie/meta
+
+python3 Scripts/build_fedx_dashboard.py \
+  --site runs/phenotype/regenie/inputs/site1.GWAMA.txt \
+  --site runs/phenotype/regenie/inputs/site2.GWAMA.txt \
+  --site runs/phenotype/regenie/inputs/site3.GWAMA.txt \
+  --meta runs/phenotype/regenie/meta.fixed.out \
+  --model fixed \
+  --trait-type binary \
+  --method regenie \
+  --html-template Scripts/fedx_dashboard.html \
+  --out-dir runs/phenotype/regenie/dashboard/fixed
 ```
 
 > [!IMPORTANT]
-> Run REGENIE, SAIGE, and PLINK results as **separate** meta-analyses — don't mix methods in one GWAMA run. All contributing sites must share the same phenotype, trait definition, and genome build.
+> When additional site methods are implemented, run REGENIE, SAIGE, and PLINK results as **separate** meta-analyses — don't mix methods in one GWAMA run. All contributing sites must share the same phenotype, trait definition, and genome build.
 
 See [`docs/gwama_fixed_random.md`](docs/gwama_fixed_random.md) for installation checks, input requirements, the complete command reference, output formats, result interpretation, testing, and troubleshooting.
 
