@@ -274,12 +274,7 @@ ls -lh data/simulated_sites/site3/
 ### REGENIE analysis workflow
 
 > [!NOTE]
-> **@Allan:** describe the REGENIE step-1/step-2 commands used per site, required flags, and expected runtime here.
-
-#### Run analysis
-
-> [!NOTE]
-> Command block for running the analysis.
+> This script orchestrates a federated genome-wide association study (GWAS) workflow at a single site by reading configuration, preparing phenotype and covariate files compatible with REGENIE from raw LDAK output, then running REGENIE's two-step association analysis. It converts the resulting summary statistics to GWAMA format for aggregation across multiple sites via the NVFLARE federated learning framework. The final output is a standardized summary statistics file that gets streamed back to a central server for meta-analysis.
 
 ### Understanding results
 
