@@ -51,35 +51,9 @@ This project extends [FedGen](https://github.com/collaborativebioinformatics/Fed
 
 ### 1. Start the NVFLARE Dashboard and FL Server
 
-*(Server-side setup — see your NVFLARE dashboard documentation.)*
+To find information on how to set up the NVFLARE dashboard, see this link: https://nvflare.readthedocs.io/en/2.4/real_world_fl/workspace.html
 
-### 2. Start an NVFLARE Client on Brev / HUNT Cloud
-
-#### 2.1 Create a GPU instance on Brev
-
-On the **Brev website**:
-
-- Create **one GPU instance per site**
-- Example configuration:
-
-  | Setting | Value |
-  |---|---|
-  | Name | `site1` |
-  | GPU | 1× NVIDIA L4 |
-  | CPU | 16 cores |
-  | RAM | 64 GB |
-
-#### 2.2 Connect to the instance
-
-```bash
-brev shell site1
-```
-
-Use a terminal multiplexer so the session survives disconnects (optional but recommended):
-
-```bash
-tmux new -s nvflare
-```
+### 2. Start all client instances, e.g., secure servers hosting cohort data 
 
 #### 2.3 Set up the Python environment
 
@@ -95,8 +69,8 @@ Verify the install:
 ```bash
 nvflare --version
 ```
-
 ### 3. Copy and start the NVFLARE client startup kit
+The client startup kit is a PIN-protected zip you download once per client from the NVFLARE dashboard/admin console. Besides the start.sh script, it bundles the set of SSL certificates that let this client authenticate to the NVFLARE server: a client certificate and private key, plus the server's root CA certificate, so the client and server can establish mutual TLS. You only need to redo this step the first time you set up a client, or if the kit is later regenerated (e.g. the certificates expire or the client is re-provisioned).
 
 #### 3.1 Copy the client kit from your local machine
 
@@ -104,16 +78,6 @@ On your **local machine**:
 
 ```bash
 brev copy <local_path_to_client_kit> site1:<remote_path>
-```
-
-On the **Brev instance**:
-
-```bash
-sudo apt update
-sudo apt install -y unzip
-
-unzip -d <client_name> -P <PIN> <client_kit.zip>
-cd <client_name>
 ```
 
 #### 3.2 Start the NVFLARE client
@@ -138,7 +102,6 @@ Two options, depending on your setup:
 - **Real cohort data** 
 - **Synthetic data:** generate a full synthetic multi-ancestry dataset locally with `Scripts/generateData.sh` — no S3 access needed. See [Synthetic Data Specifications](#synthetic-data-specifications) below for exactly what it produces.
   
-
 ### 6. Run REGENIE per site (outside NVFLARE)
 
 Run REGENIE independently per site (not through NVFLARE) to verify all dependencies are working before attempting a federated run:
