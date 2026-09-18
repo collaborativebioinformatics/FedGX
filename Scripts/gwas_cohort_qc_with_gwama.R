@@ -33,28 +33,6 @@
 #   --col-chisq CHISQ \
 #   --output-prefix COHORT1
 # ============================================================
-required_packages <- c(
-    "optparse",
-    "data.table",
-    "R.utils"
-)
-
-missing_packages <- required_packages[
-    !vapply(
-        required_packages,
-        requireNamespace,
-        logical(1),
-        quietly = TRUE
-    )
-]
-
-if (length(missing_packages) > 0) {
-    stop(
-        "Missing required R packages: ",
-        paste(missing_packages, collapse = ", "),
-        ". Please install them before running this workflow."
-    )
-}
 
 required_packages <- c(
     "optparse",
@@ -71,12 +49,47 @@ missing_packages <- required_packages[
     )
 ]
 
+user_lib <- Sys.getenv(
+    "R_LIBS_USER",
+    unset = file.path(Sys.getenv("HOME"), "R", "library")
+)
+
+dir.create(
+    user_lib,
+    recursive = TRUE,
+    showWarnings = FALSE
+)
+
+.libPaths(c(user_lib, .libPaths()))
+
 if (length(missing_packages) > 0) {
-    stop(
-        "Missing required R packages: ",
-        paste(missing_packages, collapse = ", "),
-        ". Please install them before running this workflow."
+
+    message(
+        "Installing missing R packages into: ",
+	user_lib
     )
+
+    install.packages(
+        missing_packages,
+        repos = "https://cloud.r-project.org",
+	lib = user_lib
+    )
+
+    still_missing <- missing_packages[
+        !vapply(
+            missing_packages,
+            requireNamespace,
+            logical(1),
+            quietly = TRUE
+        )
+    ]
+
+    if (length(still_missing) > 0) {
+        stop(
+            "Failed to install required R packages: ",
+            paste(still_missing, collapse = ", ")
+        )
+    }
 }
 
 suppressPackageStartupMessages({
