@@ -33,6 +33,28 @@
 #   --col-chisq CHISQ \
 #   --output-prefix COHORT1
 # ============================================================
+required_packages <- c(
+    "optparse",
+    "data.table",
+    "R.utils"
+)
+
+missing_packages <- required_packages[
+    !vapply(
+        required_packages,
+        requireNamespace,
+        logical(1),
+        quietly = TRUE
+    )
+]
+
+if (length(missing_packages) > 0) {
+    stop(
+        "Missing required R packages: ",
+        paste(missing_packages, collapse = ", "),
+        ". Please install them before running this workflow."
+    )
+}
 
 required_packages <- c(
     "optparse",
