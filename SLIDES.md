@@ -1,9 +1,3 @@
----
-marp: true
-theme: default
-paginate: true
----
-
 # FedGX
 ### Federated GWAS Across Cohort Sites
 
