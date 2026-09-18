@@ -428,7 +428,7 @@ Data and scripts: MIT License (see repository root).
 | Xiaoping Wu        | 5        | Department of Obstetrics and Gynecology, Institute of Clinical Sciences, Sahlgrenska Academy, University of Gothenburg, Gothenburg, Sweden                                                                               |
 | Moh Sallam         | 6        | Center for Quantitative Genetics and Genomics and Pioneer Center for Smartbiomed, Aarhus University                                                                                                                      |
 | Pravesh Parekh     | 7–8      | J. Craig Venter Institute, San Diego, California, USA; Centre for Precision Psychiatry, University of Oslo, Oslo, Norway                                                                                                 |
-
+with thanks to Ziyue Xu and Holger Roth from NVIDIA!
 ---
 
 <p align="center">
