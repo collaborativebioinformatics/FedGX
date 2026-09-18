@@ -4,6 +4,16 @@
 
 ![Logo](docs/logo.jpeg)
 
+---
+
+## The problem
+
+- Genome-wide association studies need **large, diverse cohorts** to find real signal
+- But cohort data usually can't leave the site it came from — privacy, governance, legal restrictions
+- Result: most GWAS run on a single biobank, missing ancestries it doesn't have
+
+---
+
 ![Status](https://img.shields.io/badge/status-hackathon_prototype-orange?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
 ![FL Framework](https://img.shields.io/badge/NVIDIA%20FLARE-2.7.1-76B900?style=for-the-badge&logo=nvidia&logoColor=white)
