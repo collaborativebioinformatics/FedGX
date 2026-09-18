@@ -1,0 +1,113 @@
+# FedGX: Federated GWAS Across Cohort Sites
+# Requirements file for Python dependencies and system tools
+# Built at Nordic Biobank x NVIDIA Hackathon
+
+# ============================================================================
+# FEDERATED LEARNING FRAMEWORK
+# ============================================================================
+nvflare[PT]==2.7.1          # NVIDIA FLARE federated learning framework with PyTorch support
+torch>=2.0.0                # PyTorch deep learning framework
+torchvision>=0.15.0         # PyTorch computer vision utilities
+tensorboard>=2.12.0         # TensorBoard for monitoring training
+
+# ============================================================================
+# GENOMICS & STATISTICS
+# ============================================================================
+# Note: REGENIE, GWAMA, and LDAK are compiled binaries installed separately
+# See setup instructions for installation of:
+#   - REGENIE v4.1
+#   - GWAMA (genome-wide association meta-analysis)
+#   - LDAK v6.1 (data generation and LD calculations)
+#   - PLINK/PLINK2 (binary format utilities)
+
+# ============================================================================
+# DATA HANDLING & COMPUTATION
+# ============================================================================
+numpy>=1.21.0               # Numerical computing
+scipy>=1.7.0                # Scientific computing
+pandas>=1.3.0               # Data manipulation and analysis
+scikit-learn>=0.24.0        # Machine learning utilities
+
+# ============================================================================
+# DATA VISUALIZATION
+# ============================================================================
+matplotlib>=3.4.0           # Plotting library
+seaborn>=0.11.0             # Statistical data visualization
+plotly>=5.0.0               # Interactive plotting
+
+
+
+# ============================================================================
+# UTILITIES & CONFIGURATION
+# ============================================================================
+pyyaml>=6.0                 # YAML configuration files
+python-dotenv>=0.19.0       # Environment variable management
+click>=8.0.0                # Command-line interface toolkit
+pqdm>=0.1.0                 # Progress bar for pandas operations
+tqdm>=4.62.0                # Progress bars for iterations
+
+# ============================================================================
+# DEVELOPMENT & TESTING
+# ============================================================================
+pytest>=6.2.0               # Testing framework
+pytest-cov>=2.12.0          # Code coverage for pytest
+black>=21.0                 # Code formatter
+flake8>=3.9.0               # Linting
+mypy>=0.910                 # Static type checking
+
+# ============================================================================
+# SYSTEM REQUIREMENTS (install via apt, conda, or manual download)
+# ============================================================================
+# Python:           3.10+
+# CUDA Toolkit:     11.8+ (for GPU support on NVIDIA instances)
+# cuDNN:            8.0+ (for deep learning, if using torch on GPU)
+# git:              2.25+
+# tmux or screen:   for session management on remote instances
+# gcc/g++:          9.0+ (for compiling some Python packages)
+# PLINK/PLINK2:     v1.9+ or v2.0+ (for PLINK binary format support)
+#
+# On Ubuntu/Debian:
+#   sudo apt update
+#   sudo apt install -y build-essential python3-dev python3-venv git tmux
+#   sudo apt install -y nvidia-cuda-toolkit nvidia-utils  # if GPU available
+#
+# For NVIDIA GPU support on Brev/cloud instances:
+#   nvidia-smi  # verify GPU availability
+#   Install CUDA 11.8+
+#   Install cuDNN 8.0+
+
+# ============================================================================
+# INSTALLATION INSTRUCTIONS
+# ============================================================================
+# 1. Create and activate a virtual environment:
+#    python3 -m venv venv_nvflare
+#    source venv_nvflare/bin/activate
+#
+# 2. Install this requirements file:
+#    pip install -r requirements.txt
+#
+# 3. Verify key installations:
+#    nvflare --version
+#    python3 -c "import torch; print(torch.__version__)"
+#    regenie --help  # if REGENIE is in PATH
+#
+# 4. For federated learning on Brev instances:
+#    - Ensure one venv per NVFLARE client instance
+#    - Use tmux to persist sessions during long jobs
+#    - Configure AWS credentials (IAM role recommended over static keys)
+#    - Validate GPU with: nvidia-smi
+#
+# 5. To generate synthetic data locally:
+#    bash Scripts/generateData.sh
+#    # Produces 3 sites with ~500K SNPs, ~100K samples each
+
+# ============================================================================
+# NOTES
+# ============================================================================
+# - REGENIE, GWAMA, LDAK, and PLINK are compiled binaries and must be
+#   installed separately. Add them to your PATH or reference by full path.
+# - GPU support requires CUDA 11.8+ and cuDNN 8.0+
+# - For production federated runs, ensure NVFLARE security certificates
+#   are properly configured via the dashboard.
+# - See docs/gwama_fixed_random.md for GWAMA input/output specifications.
+# - See README.md for the full quickstart and detailed setup guide.

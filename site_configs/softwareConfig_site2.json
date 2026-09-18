@@ -1,9 +1,0 @@
-{
-  "regenie": "/home/ubuntu/tools/regenie",
-  "plink":   "/home/ubuntu/tools/plink",
-  "plink2":  "/home/ubuntu/tools/plink2",
-  "gcta":    "/home/ubuntu/tools/gcta64",
-  "saige":   "/home/ubuntu/tools/step2_SPAtests.R",
-  "GWAMA":   "/home/ubuntu/tools/GWAMA",
-  "Rscript": "/usr/bin/Rscript"
-}
