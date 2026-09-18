@@ -133,6 +133,7 @@ Configure the local site client to obtain metadata: create `~/fedgx_config/confi
 ```
 
 `traittype` defaults to `binary` and `build` to `GRCh38` if omitted. The REGENIE binary path is set separately via the `REGENIE` environment variable, not through this file.
+`programs` should be in the PATH on the client
 
 ### 6. Run REGENIE per site (outside NVFLARE)
 
